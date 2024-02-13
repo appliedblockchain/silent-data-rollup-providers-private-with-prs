@@ -1,0 +1,6 @@
+# Ignore all node_modules folders and sub folders
+node_modules
+**/dist
+**/build
+wip
+.env
