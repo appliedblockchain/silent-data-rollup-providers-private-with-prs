@@ -1,0 +1,7 @@
+{
+  "name": "contracts",
+  "packageManager": "yarn@3.6.3",
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.1"
+  }
+}
