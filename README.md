@@ -1,32 +1,95 @@
 # Silent Data Rollup Quickstart
 
-## Usage 
+### Dependencies
 
-Install dependencies
+- [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+- [nodejs](https://nodejs.org/en/learn/getting-started/how-to-install-nodejs)
+- [npm](https://nodejs.org/en/learn/getting-started/an-introduction-to-the-npm-package-manager#introduction-to-npm)
+- [yarn](https://classic.yarnpkg.com/lang/en/docs/install)
+- [cast](https://book.getfoundry.sh/getting-started/installation)
+
+Note: npm is part of nodejs installation, once you installed it you should have access to npm.
+
+### Check dependencies are installed
+
+Running the following commands should output the current version installed.
+```
+git --version
+node -v
+npm -v
+yarn -v
+cast --version
+```
+
+### Environment Variables Overview
+
+- **RPC_URL**
+
+    Should match the URL to access our Silent Data Rollup.
+
+    ```
+    https://<the-silent-data-node-url>/<your-token>
+    ```
+
+    To get the Provider RPC URL you should login at the provided frontend URL (using your account credentials). Then on the upper right corner open the menu and choose the 'Endpoints' menu item. Then select the first available one and the Provider RPC URL will be shown.
+
+    To get your token, in the same view select the 'Security' tab and generate a new token.
+
+- **NETWORK_NAME**
+
+  Can be any name of your choosing, it's used by the SilentDataRollupRPCProvider constructor
+
+- **CHAIN_ID**
+
+  Should be the value 51966
+
+
+# Important: Environment Setup
+
+1) Login at [Silent Data Rollup](https://frontend-staging-rollup.silentdata.com/login) using your account.
+2) On the top corner right menu, click and select 'Appchains' option.
+3) Click in the currently available 'Appchain' from the table.
+4) Go to the Security tab and generate a new token.
+5) Copy the generated token 
+6) Create a copy of the **.env.example** file and name it **.env**
+7) Open the created file **.env**
+8) On the first variable named **RPC_URL**, just replace **&lt;your-token&gt;** with your actual token copied from step 5.
+
+
+# Installation 
+
+1) First you should clone the git repository by executing the following command:
+```
+git clone git@github.com:appliedblockchain/silent-data-rollup-quickstart.git
+```
+
+2) Open a terminal and from the project root folder execute the following command to install the project package dependencies.
 ```sh
 yarn 
 ```
 
-Copy the `.env-example` to `.env` and input the secrets (Check Section Environment Variables)
-```sh
-cp -a .env-example .env
-```
-
-Build the connector
+3) Build the quick startapplication
 ```sh
 yarn build 
-or
-yarn workspace connector build
 ```
 
-Start the App
+4) Start the application
 ```sh
-yarn start 
-or
-yarn workspace app start
+yarn start
 ```
 
-### Example App Instructions
+# Usage Examples
+
+To use the quickstart you should use your Ethereum Wallet or create a new one, for that purpose we will use **cast** marked as dependency on top of this README, to create a new Ethereum Wallet.
+
+**Generate a new Ethereum Wallet**
+
+```
+cast wallet new
+```
+By running the cast command above you should now have a Private Key and Address for your new Ethereum Wallet.
+
+
 
 **Get Wallet Balance (ETH)**
 
@@ -136,28 +199,6 @@ Insert the wallet address that you want to use check the token balance
                   ^
 Error: {"code":3,"message":"execution reverted: PrivateToken: balance query for non-owner","data":"0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002950726976617465546f6b656e3a2062616c616e636520717565727920666f72206e6f6e2d6f776e65720000000000000000000000000000000000000000000000"}
 ```
-
-## Environment Variables
-
-- **RPC_URL**
-
-    Should match the URL to access our Silent Data Rollup.
-
-    ```
-    https://<the-silent-data-node-url>/<your-token>
-    ```
-
-    To get the Provider RPC URL you should login at the provided frontend URL (using your account credentials). Then on the upper right corner open the menu and choose the 'Endpoints' menu item. Then select the first available one and the Provider RPC URL will be shown.
-
-    To get your token, in the same view select the 'Security' tab and generate a new token.
-
-- **NETWORK_NAME**
-
-  Can be any name of your choosing, it's used by the SilentDataRollupRPCProvider constructor
-
-- **CHAIN_ID**
-
-  Should be the value 51966
 
 ## Structure
 - `app` workspace 
