@@ -68,7 +68,7 @@ git clone git@github.com:appliedblockchain/silent-data-rollup-quickstart.git
 yarn 
 ```
 
-3) Build the quick startapplication
+3) Build the quick-start application
 ```sh
 yarn build 
 ```
