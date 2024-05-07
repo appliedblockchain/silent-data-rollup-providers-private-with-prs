@@ -3,12 +3,25 @@
 ### Dependencies
 
 - [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
-- [nodejs](https://nodejs.org/en/learn/getting-started/how-to-install-nodejs)
+- [nodejs 18.17.1(or latest)](https://nodejs.org/en/learn/getting-started/how-to-install-nodejs)
 - [npm](https://nodejs.org/en/learn/getting-started/an-introduction-to-the-npm-package-manager#introduction-to-npm)
-- [yarn](https://classic.yarnpkg.com/lang/en/docs/install)
+- [yarn 3.6.3 (or latest)](https://classic.yarnpkg.com/lang/en/docs/install)
 - [cast](https://book.getfoundry.sh/getting-started/installation)
 
 Note: npm is part of nodejs installation, once you installed it you should have access to npm.
+
+### Yarn Installation
+
+- After installing nodejs v18.17.1 or greater version, use the following commands
+
+```
+npm install -g corepack
+corepack enable
+yarn -v
+```
+
+The last command will ask if you want to install Yarn and print the version, type 'Y' and proceed.
+
 
 ### Check dependencies are installed
 
@@ -31,9 +44,9 @@ cast --version
     https://<the-silent-data-node-url>/<your-token>
     ```
 
-    To get the Provider RPC URL you should login at the provided frontend URL (using your account credentials). Then on the upper right corner open the menu and choose the 'Endpoints' menu item. Then select the first available one and the Provider RPC URL will be shown.
+    To get the Provider RPC URL you should login at the provided frontend URL (using your account credentials). Then on the upper right corner open the menu and choose the 'Appchains' menu item. Then select the first available one and the Provider RPC URL will be shown.
 
-    To get your token, in the same view select the 'Security' tab and generate a new token.
+    To get your token, in the same view select the 'Security' tab and generate a new token (in order to generate a new token you can press the button in the same panel to subscribe for a trial account).
 
 - **NETWORK_NAME**
 
