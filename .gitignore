@@ -1,3 +1,13 @@
 node_modules
 .yarn
 .env
+
+hardhat/hardhat-sdr/package-lock.json
+hardhat/hardhat-sdr/node_modules
+hardhat/hardhat-sdr/dist
+hardhat/hardhat-sdr-usage/artifacts
+hardhat/hardhat-sdr-usage/node_modules
+hardhat/hardhat-sdr-usage/hardhat.config.js
+hardhat/hardhat-sdr-usage/package-lock.json
+hardhat/hardhat-sdr-usage/cache
+hardhat/hardhat-sdr-usage/artifacts
