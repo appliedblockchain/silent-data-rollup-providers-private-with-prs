@@ -1,4 +1,4 @@
-import type { ethers as EthersT } from "ethers";
+import type { BaseContract, Contract, ContractRunner, ethers as EthersT } from "ethers";
 import { ethers } from "ethers";
 import type { HardhatEthersSigner } from "../signers";
 import type {
@@ -41,37 +41,26 @@ function isArtifact(artifact: any): artifact is Artifact {
 export async function getSigners(
   hre: HardhatRuntimeEnvironment
 ): Promise<EthersT.Signer[]> {
-  //const accounts: string[] = await hre.ethers.provider.send("eth_accounts", []);
-
-  // const signersWithAddress = await Promise.all(
-  //   accounts.map((account) => getSigner(hre, account))
-  // );
-
-  // console.log(signersWithAddress)
-
-  return [new ethers.Wallet((hre.config.networks[hre.config.defaultNetwork] as any)['accounts'][0], hre.ethers.provider) as EthersT.Signer];
+  return (hre.config.networks[hre.config.defaultNetwork] as any)['accounts'].map((account: any) => new ethers.Wallet(account, hre.ethers.provider) as EthersT.Signer)
 }
 
 export async function getSigner(
   hre: HardhatRuntimeEnvironment,
   address: string
-): Promise<HardhatEthersSigner> {
-  const { HardhatEthersSigner: SignerWithAddressImpl } = await import(
-    "../signers"
-  );
-
-  const signerWithAddress = await SignerWithAddressImpl.create(
-    hre.ethers.provider,
-    address
-  );
-
-  return signerWithAddress;
+): Promise<EthersT.Signer> {
+  const signers = await getSigners(hre)
+  for (let i = 0; i != signers.length; i++ ){
+    if (await signers[i].getAddress() == address) {
+      return signers[i]
+    }
+  }
+  throw new Error('No Signer Found!')
 }
 
 export async function getImpersonatedSigner(
   hre: HardhatRuntimeEnvironment,
   address: string
-): Promise<HardhatEthersSigner> {
+): Promise<EthersT.Signer> {
   await hre.ethers.provider.send("hardhat_impersonateAccount", [address]);
   return getSigner(hre, address);
 }
@@ -106,6 +95,7 @@ export async function getContractFactory<
     | EthersT.BytesLike,
   signer?: EthersT.Signer
 ): Promise<EthersT.ContractFactory<A, I>> {
+  hre.ethers.provider.setSigner(signer)
   if (typeof nameOrAbi === "string") {
     const artifact = await hre.artifacts.readArtifact(nameOrAbi);
 
@@ -142,6 +132,7 @@ export async function getContractFactoryFromArtifact<
   artifact: Artifact,
   signerOrOptions?: EthersT.Signer | FactoryOptions
 ): Promise<EthersT.ContractFactory<A, I>> {
+  
   let libraries: Libraries = {};
   let signer: EthersT.Signer | undefined;
 
@@ -157,6 +148,8 @@ export async function getContractFactoryFromArtifact<
   } else {
     signer = signerOrOptions;
   }
+
+  hre.ethers.provider.setSigner(signer)
 
   if (artifact.bytecode === "0x") {
     throw new HardhatEthersError(
@@ -330,6 +323,7 @@ export async function getContractAt(
     const signers = await getSigners(hre);
     signer = signers[0];
   }
+  hre.ethers.provider.setSigner(signer);
 
   // If there's no signer, we want to put the provider for the selected network here.
   // This allows read only operations on the contract interface.
@@ -372,9 +366,12 @@ export async function deployContract(
     signerOrOptions = argsOrSignerOrOptions;
   }
 
+  
+
   let overrides: EthersT.Overrides = {};
   if (signerOrOptions !== undefined && !("getAddress" in signerOrOptions)) {
     const overridesAndFactoryOptions = { ...signerOrOptions };
+    hre.ethers.provider.setSigner(signerOrOptions?.signer);
 
     // we delete the factory options properties in case ethers
     // rejects unknown properties
@@ -383,9 +380,15 @@ export async function deployContract(
 
     overrides = overridesAndFactoryOptions;
   }
+  
 
   const factory = await getContractFactory(hre, name, signerOrOptions);
   return factory.deploy(...args, overrides);
+}
+
+export function connect(hre: HardhatRuntimeEnvironment, contract: Contract, runner: null | ContractRunner): BaseContract {
+  hre.ethers.provider.setSigner(runner);
+  return contract.connect(runner);
 }
 
 export async function getContractAtFromArtifact(
@@ -405,6 +408,7 @@ export async function getContractAtFromArtifact(
     const signers = await getSigners(hre);
     signer = signers[0];
   }
+  hre.ethers.provider.setSigner(signer);
 
   let resolvedAddress;
   if (ethers.isAddressable(address)) {

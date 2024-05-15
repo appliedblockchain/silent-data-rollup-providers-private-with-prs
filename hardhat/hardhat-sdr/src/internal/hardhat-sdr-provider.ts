@@ -99,15 +99,19 @@ export class HardhatEthersProvider implements ethers.Provider {
     'eth_call',
   ]
 
-  constructor(
-    private readonly _hardhatProvider: EthereumProvider,
+  private signer: ethers.Signer | null = null;
+
+  constructor(        
     private readonly _networkName: string,
     private readonly _providerUrl: string,
-    private readonly _signerPk: string,
   ) {}
 
   public get provider(): this {
     return this;
+  }
+
+  public setSigner(receivedSigner: ethers.Signer) {
+    this.signer = receivedSigner;
   }
 
   public destroy() {}
@@ -122,10 +126,10 @@ export class HardhatEthersProvider implements ethers.Provider {
       params,
     }
 
-    let headers = {}
+    let headers = {}    
 
     if (this.signMethods.includes(method)) {
-      const signer = new ethers.Wallet(this._signerPk, this) as ethers.Signer
+      const signer = this.getSigner() as ethers.Signer
       const xTimestamp = (new Date()).toISOString()
       const serialRequest = JSON.stringify(payload)
       const xMessage = serialRequest + xTimestamp
@@ -165,29 +169,8 @@ export class HardhatEthersProvider implements ethers.Provider {
     }
   }
 
-  public async getSigner(
-    address?: number | string
-  ): Promise<HardhatEthersSigner> {
-    if (address === null || address === undefined) {
-      address = 0;
-    }
-
-    const accountsPromise = this.send("eth_accounts", []);
-
-    // Account index
-    if (typeof address === "number") {
-      const accounts: string[] = await accountsPromise;
-      if (address >= accounts.length) {
-        throw new AccountIndexOutOfRange(address, accounts.length);
-      }
-      return HardhatEthersSigner.create(this, accounts[address]);
-    }
-
-    if (typeof address === "string") {
-      return HardhatEthersSigner.create(this, address);
-    }
-
-    throw new HardhatEthersError(`Couldn't get account ${address as any}`);
+  public getSigner(): ethers.Signer | null {
+    return this.signer;
   }
 
   public async getBlockNumber(): Promise<number> {
@@ -397,12 +380,12 @@ export class HardhatEthersProvider implements ethers.Provider {
     let counter = 0;
     while (txReceipt === null || counter !== tries) {
       try {  
+        counter++;
         await new Promise((resolve) => setTimeout(resolve, 1000))
         txReceipt = await this.send(
           "eth_getTransactionReceipt",
           [hash]
         );
-        counter++;
       } catch(e) {
         continue
       }

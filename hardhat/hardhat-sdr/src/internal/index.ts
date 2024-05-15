@@ -1,4 +1,5 @@
-import type EthersT from "ethers";
+import EthersT from "ethers";
+import type { Contract, ContractRunner } from "ethers";
 import type { HardhatEthersProvider as HardhatEthersProviderT } from "./hardhat-sdr-provider";
 import "./extensions";
 import { extendEnvironment } from "hardhat/config";
@@ -13,6 +14,7 @@ import {
   getSigner,
   getSigners,
   deployContract,
+  connect,
 } from "./helper";
 
 
@@ -23,18 +25,16 @@ extendEnvironment((hre) => {
       HardhatEthersProvider: typeof HardhatEthersProviderT;
     };
 
-    const provider = new HardhatEthersProvider(
-      hre.network.provider,
+    const provider = new HardhatEthersProvider(      
       hre.network.name,
       (hre.config.networks[hre.config.defaultNetwork] as any)['url'],
-      (hre.config.networks[hre.config.defaultNetwork] as any)['accounts'][0]
     );
 
     return {
       ...ethers,
 
       provider,
-
+      connect: (contract: Contract, runner: null | ContractRunner) => connect(hre, contract, runner),
       getSigner: (address: string) => getSigner(hre, address),
       getSigners: () => getSigners(hre),
       getImpersonatedSigner: (address: string) =>
