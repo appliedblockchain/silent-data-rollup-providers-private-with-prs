@@ -41,7 +41,7 @@ function isArtifact(artifact: any): artifact is Artifact {
 export async function getSigners(
   hre: HardhatRuntimeEnvironment
 ): Promise<EthersT.Signer[]> {
-  return (hre.config.networks[hre.config.defaultNetwork] as any)['accounts'].map((account: any) => new ethers.Wallet(account, hre.ethers.provider) as EthersT.Signer)
+  return (hre.config.networks[hre.network.name] as any)['accounts'].map((account: any) => new ethers.Wallet(account, hre.ethers_sdr.provider) as EthersT.Signer)
 }
 
 export async function getSigner(
@@ -61,7 +61,7 @@ export async function getImpersonatedSigner(
   hre: HardhatRuntimeEnvironment,
   address: string
 ): Promise<EthersT.Signer> {
-  await hre.ethers.provider.send("hardhat_impersonateAccount", [address]);
+  await hre.ethers_sdr.provider.send("hardhat_impersonateAccount", [address]);
   return getSigner(hre, address);
 }
 
@@ -95,7 +95,7 @@ export async function getContractFactory<
     | EthersT.BytesLike,
   signer?: EthersT.Signer
 ): Promise<EthersT.ContractFactory<A, I>> {
-  hre.ethers.provider.setSigner(signer)
+  hre.ethers_sdr.provider.setSigner(signer)
   if (typeof nameOrAbi === "string") {
     const artifact = await hre.artifacts.readArtifact(nameOrAbi);
 
@@ -149,7 +149,7 @@ export async function getContractFactoryFromArtifact<
     signer = signerOrOptions;
   }
 
-  hre.ethers.provider.setSigner(signer)
+  hre.ethers_sdr.provider.setSigner(signer)
 
   if (artifact.bytecode === "0x") {
     throw new HardhatEthersError(
@@ -323,12 +323,12 @@ export async function getContractAt(
     const signers = await getSigners(hre);
     signer = signers[0];
   }
-  hre.ethers.provider.setSigner(signer);
+  hre.ethers_sdr.provider.setSigner(signer);
 
   // If there's no signer, we want to put the provider for the selected network here.
   // This allows read only operations on the contract interface.
   const signerOrProvider: EthersT.Signer | EthersT.Provider =
-    signer !== undefined ? signer : hre.ethers.provider;
+    signer !== undefined ? signer : hre.ethers_sdr.provider;
 
   let resolvedAddress;
   if (ethers.isAddressable(address)) {
@@ -371,7 +371,7 @@ export async function deployContract(
   let overrides: EthersT.Overrides = {};
   if (signerOrOptions !== undefined && !("getAddress" in signerOrOptions)) {
     const overridesAndFactoryOptions = { ...signerOrOptions };
-    hre.ethers.provider.setSigner(signerOrOptions?.signer);
+    hre.ethers_sdr.provider.setSigner(signerOrOptions?.signer);
 
     // we delete the factory options properties in case ethers
     // rejects unknown properties
@@ -387,7 +387,7 @@ export async function deployContract(
 }
 
 export function connect(hre: HardhatRuntimeEnvironment, contract: Contract, runner: null | ContractRunner): BaseContract {
-  hre.ethers.provider.setSigner(runner);
+  hre.ethers_sdr.provider.setSigner(runner);
   return contract.connect(runner);
 }
 
@@ -408,7 +408,7 @@ export async function getContractAtFromArtifact(
     const signers = await getSigners(hre);
     signer = signers[0];
   }
-  hre.ethers.provider.setSigner(signer);
+  hre.ethers_sdr.provider.setSigner(signer);
 
   let resolvedAddress;
   if (ethers.isAddressable(address)) {
@@ -420,7 +420,7 @@ export async function getContractAtFromArtifact(
   let contract = new ethers.Contract(resolvedAddress, artifact.abi, signer);
 
   if (contract.runner === null) {
-    contract = contract.connect(hre.ethers.provider) as EthersT.Contract;
+    contract = contract.connect(hre.ethers_sdr.provider) as EthersT.Contract;
   }
 
   return contract;
