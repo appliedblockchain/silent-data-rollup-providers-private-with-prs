@@ -375,10 +375,10 @@ export class HardhatEthersProvider implements ethers.Provider {
     hash: string
   ): Promise<ethers.TransactionReceipt | null> {
 
-    const tries = 10;
+    const tries = 60;
     let txReceipt : ethers.TransactionReceipt | null = null;    
     let counter = 0;
-    while (txReceipt === null || counter !== tries) {
+    while (txReceipt == null && counter < tries) {
       try {  
         counter++;
         await new Promise((resolve) => setTimeout(resolve, 1000))
