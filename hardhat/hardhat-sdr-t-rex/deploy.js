@@ -19,66 +19,66 @@ async function main() {
 main();
 
 async function deployIdentityProxy(implementationAuthority, managementKey, signer) {
-  const identity = await hre.ethers_sdr.getContractFactory(OnchainID.contracts.IdentityProxy.abi, OnchainID.contracts.IdentityProxy.bytecode, signer);
+  const identity = await hre.ethers.getContractFactory(OnchainID.contracts.IdentityProxy.abi, OnchainID.contracts.IdentityProxy.bytecode, signer);
   const deployIdentity = await identity.deploy(
     implementationAuthority,
     managementKey,
   );
   await deployIdentity.waitForDeployment()
   
-  return hre.ethers_sdr.getContractAt('Identity', await deployIdentity.getAddress(), signer);
+  return hre.ethers.getContractAt('Identity', await deployIdentity.getAddress(), signer);
 }
 
 
 async function deployFullSuiteFixture() {
   const [deployer, tokenIssuer, tokenAgent, tokenAdmin, claimIssuer, aliceWallet, bobWallet, charlieWallet, davidWallet, anotherWallet] =
-    await hre.ethers_sdr.getSigners();
+    await hre.ethers.getSigners();
   const claimIssuerSigningKey = ethers.Wallet.createRandom();
   const aliceActionKey = ethers.Wallet.createRandom();
 
   console.log('Before deploying implementations...')
   // Deploy implementations
-  const claimTopicsRegistryImplementation = await hre.ethers_sdr.deployContract('ClaimTopicsRegistry', deployer);
+  const claimTopicsRegistryImplementation = await hre.ethers.deployContract('ClaimTopicsRegistry', deployer);
   await claimTopicsRegistryImplementation.waitForDeployment();
   console.log("ClaimTopicsRegistry deployed...")
-  const trustedIssuersRegistryImplementation = await hre.ethers_sdr.deployContract('TrustedIssuersRegistry', deployer);
+  const trustedIssuersRegistryImplementation = await hre.ethers.deployContract('TrustedIssuersRegistry', deployer);
   await trustedIssuersRegistryImplementation.waitForDeployment();
   console.log("TrustedIssuersRegistry deployed...")
-  const identityRegistryStorageImplementation = await hre.ethers_sdr.deployContract('IdentityRegistryStorage', deployer);
+  const identityRegistryStorageImplementation = await hre.ethers.deployContract('IdentityRegistryStorage', deployer);
   await identityRegistryStorageImplementation.waitForDeployment();
   console.log("IdentityRegistryStorage deployed...")
-  const identityRegistryImplementation = await hre.ethers_sdr.deployContract('IdentityRegistry', deployer);
+  const identityRegistryImplementation = await hre.ethers.deployContract('IdentityRegistry', deployer);
   await identityRegistryImplementation.waitForDeployment();
   console.log("IdentityRegistry deployed...")
-  const modularComplianceImplementation = await hre.ethers_sdr.deployContract('ModularCompliance', deployer);
+  const modularComplianceImplementation = await hre.ethers.deployContract('ModularCompliance', deployer);
   await modularComplianceImplementation.waitForDeployment();
   console.log("ModularCompliance deployed...")
-  const tokenImplementation = await hre.ethers_sdr.deployContract('Token', deployer);
+  const tokenImplementation = await hre.ethers.deployContract('Token', deployer);
   await tokenImplementation.waitForDeployment();
   console.log('After deploying implementations.')
 
-  const identityImplementation = await new hre.ethers_sdr.ContractFactory(
+  const identityImplementation = await new hre.ethers.ContractFactory(
     OnchainID.contracts.Identity.abi,
     OnchainID.contracts.Identity.bytecode,
     deployer,
   ).deploy(await deployer.getAddress(), true);
   await identityImplementation.waitForDeployment();
   console.log('After deploying identity.')
-  const identityImplementationAuthority = await new hre.ethers_sdr.ContractFactory(
+  const identityImplementationAuthority = await new hre.ethers.ContractFactory(
     OnchainID.contracts.ImplementationAuthority.abi,
     OnchainID.contracts.ImplementationAuthority.bytecode,
     deployer,
   ).deploy(await identityImplementation.getAddress());
   await identityImplementationAuthority.waitForDeployment();
   console.log('After deploying identity authority.')
-  const identityFactory = await new hre.ethers_sdr.ContractFactory(OnchainID.contracts.Factory.abi, OnchainID.contracts.Factory.bytecode, deployer).deploy(
+  const identityFactory = await new hre.ethers.ContractFactory(OnchainID.contracts.Factory.abi, OnchainID.contracts.Factory.bytecode, deployer).deploy(
     await identityImplementationAuthority.getAddress(),
   );
   await identityFactory.waitForDeployment();
 
 
   console.log('After deploying identity factory.')
-  const trexImplementationAuthority = await hre.ethers_sdr.deployContract(
+  const trexImplementationAuthority = await hre.ethers.deployContract(
     'TREXImplementationAuthority',
     [true, ethers.constants.AddressZero, ethers.constants.AddressZero],
     deployer,
@@ -98,19 +98,19 @@ async function deployFullSuiteFixture() {
     tirImplementation: await trustedIssuersRegistryImplementation.getAddress(),
     mcImplementation: await modularComplianceImplementation.getAddress(),
   };
-  await hre.ethers_sdr.connect(trexImplementationAuthority, deployer).addAndUseTREXVersion(versionStruct, contractsStruct);
+  await hre.ethers.connect(trexImplementationAuthority, deployer).addAndUseTREXVersion(versionStruct, contractsStruct);
 
-  const trexFactory = await hre.ethers_sdr.deployContract('TREXFactory', [await trexImplementationAuthority.getAddress(), await identityFactory.getAddress()], deployer);
+  const trexFactory = await hre.ethers.deployContract('TREXFactory', [await trexImplementationAuthority.getAddress(), await identityFactory.getAddress()], deployer);
   await trexFactory.waitForDeployment();
   console.log('After deploying trex factory.')
 
-  await hre.ethers_sdr.connect(identityFactory, deployer).addTokenFactory(await trexFactory.getAddress());
+  await hre.ethers.connect(identityFactory, deployer).addTokenFactory(await trexFactory.getAddress());
 
   const claimTopicsRegistry = await hre.ethers
     .deployContract('ClaimTopicsRegistryProxy', [await trexImplementationAuthority.getAddress()], deployer)
     .then(async (proxy) => {
       await proxy.waitForDeployment();
-      return hre.ethers_sdr.getContractAt('ClaimTopicsRegistry', await proxy.getAddress())
+      return hre.ethers.getContractAt('ClaimTopicsRegistry', await proxy.getAddress())
     });
   console.log('After deploying claim topics registry.')
 
@@ -118,7 +118,7 @@ async function deployFullSuiteFixture() {
     .deployContract('TrustedIssuersRegistryProxy', [await trexImplementationAuthority.getAddress()], deployer)
     .then(async (proxy) => { 
       await proxy.waitForDeployment();
-      return hre.ethers_sdr.getContractAt('TrustedIssuersRegistry', await proxy.getAddress())
+      return hre.ethers.getContractAt('TrustedIssuersRegistry', await proxy.getAddress())
     });
   console.log('After deploying trusted issuers registry.')
   
@@ -126,11 +126,11 @@ async function deployFullSuiteFixture() {
     .deployContract('IdentityRegistryStorageProxy', [await trexImplementationAuthority.getAddress()], deployer)
     .then(async (proxy) => {
       await proxy.waitForDeployment();
-      return hre.ethers_sdr.getContractAt('IdentityRegistryStorage', await proxy.getAddress());
+      return hre.ethers.getContractAt('IdentityRegistryStorage', await proxy.getAddress());
     });
   console.log('After deploying identity registry storage.')
 
-  const defaultCompliance = await hre.ethers_sdr.deployContract('DefaultCompliance', deployer);
+  const defaultCompliance = await hre.ethers.deployContract('DefaultCompliance', deployer);
   await defaultCompliance.waitForDeployment()
   console.log('After deploying default compliance.')
 
@@ -142,7 +142,7 @@ async function deployFullSuiteFixture() {
     )
     .then(async (proxy) => {
       await proxy.waitForDeployment();
-      return hre.ethers_sdr.getContractAt('IdentityRegistry', await proxy.getAddress())
+      return hre.ethers.getContractAt('IdentityRegistry', await proxy.getAddress())
     });
   console.log('After deploying identity registry.')
 
@@ -166,39 +166,39 @@ async function deployFullSuiteFixture() {
     )
     .then(async (proxy) => {
       await proxy.waitForDeployment();
-      return hre.ethers_sdr.getContractAt('Token', await proxy.getAddress())
+      return hre.ethers.getContractAt('Token', await proxy.getAddress())
     });
   console.log('After deploying token proxy.')
 
-  const agentManager = await hre.ethers_sdr.deployContract('AgentManager', [await token.getAddress()], tokenAgent);
+  const agentManager = await hre.ethers.deployContract('AgentManager', [await token.getAddress()], tokenAgent);
   await agentManager.waitForDeployment();
   console.log('After deploying agent manager.')
 
-  await hre.ethers_sdr.connect(identityRegistryStorage, deployer).bindIdentityRegistry(await identityRegistry.getAddress());
+  await hre.ethers.connect(identityRegistryStorage, deployer).bindIdentityRegistry(await identityRegistry.getAddress());
   console.log('After binding registry.')
 
-  await hre.ethers_sdr.connect(token, deployer).addAgent(await tokenAgent.getAddress());
+  await hre.ethers.connect(token, deployer).addAgent(await tokenAgent.getAddress());
   console.log('After adding agent.')
 
   const claimTopics = [ethers.utils.id('CLAIM_TOPIC')];
-  await hre.ethers_sdr.connect(claimTopicsRegistry, deployer).addClaimTopic(claimTopics[0]);
+  await hre.ethers.connect(claimTopicsRegistry, deployer).addClaimTopic(claimTopics[0]);
   console.log('After adding claim topic.')
 
-  const claimIssuerContract = await hre.ethers_sdr.deployContract('ClaimIssuer', [await claimIssuer.getAddress()], claimIssuer);
+  const claimIssuerContract = await hre.ethers.deployContract('ClaimIssuer', [await claimIssuer.getAddress()], claimIssuer);
   await claimIssuerContract.waitForDeployment();
   console.log('After deploying claim issuer contract.')
 
-  await hre.ethers_sdr.connect(claimIssuerContract, claimIssuer)
+  await hre.ethers.connect(claimIssuerContract, claimIssuer)
     .addKey(ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['address'], [await claimIssuerSigningKey.getAddress()])), 3, 1);
   console.log('After adding key.')
 
-  await hre.ethers_sdr.connect(trustedIssuersRegistry, deployer).addTrustedIssuer(await claimIssuerContract.getAddress(), claimTopics);
+  await hre.ethers.connect(trustedIssuersRegistry, deployer).addTrustedIssuer(await claimIssuerContract.getAddress(), claimTopics);
   console.log('After adding trusted issuer.')
 
   const aliceIdentity = await deployIdentityProxy(await identityImplementationAuthority.getAddress(), await aliceWallet.getAddress(), deployer);
   console.log('After deploying identity proxy alice.')
 
-  const aliceIdentityWithSigner = await hre.ethers_sdr.getContractAt('Identity', await aliceIdentity.getAddress(), aliceWallet)
+  const aliceIdentityWithSigner = await hre.ethers.getContractAt('Identity', await aliceIdentity.getAddress(), aliceWallet)
   await aliceIdentityWithSigner.addKey(ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['address'], [await aliceActionKey.getAddress()])), 2, 1);
   console.log('After adding key with Alice signer.')
 
@@ -207,13 +207,13 @@ async function deployFullSuiteFixture() {
   const charlieIdentity = await deployIdentityProxy(await identityImplementationAuthority.getAddress(), await charlieWallet.getAddress(), deployer);
   console.log('After deploying identity proxy charlie.')
 
-  const identityRegistry1 = await hre.ethers_sdr.getContractAt('IdentityRegistry', await identityRegistry.getAddress(), deployer);
+  const identityRegistry1 = await hre.ethers.getContractAt('IdentityRegistry', await identityRegistry.getAddress(), deployer);
   await identityRegistry1.addAgent(await tokenAgent.getAddress());
   
-  const identityRegistry2 = await hre.ethers_sdr.getContractAt('IdentityRegistry', await identityRegistry.getAddress(), deployer);
+  const identityRegistry2 = await hre.ethers.getContractAt('IdentityRegistry', await identityRegistry.getAddress(), deployer);
   await identityRegistry2.addAgent(await token.getAddress());
 
-  const identityRegistry3 = await hre.ethers_sdr.getContractAt('IdentityRegistry', await identityRegistry.getAddress(), tokenAgent);
+  const identityRegistry3 = await hre.ethers.getContractAt('IdentityRegistry', await identityRegistry.getAddress(), tokenAgent);
   await identityRegistry3.batchRegisterIdentity([await aliceWallet.getAddress(), await bobWallet.getAddress()], [await aliceIdentity.getAddress(), await bobIdentity.getAddress()], [42, 666]);
   console.log('After batch register identity.')
 
@@ -234,7 +234,7 @@ async function deployFullSuiteFixture() {
   );
 
   console.log("Adding alice identity claim")
-  const aliceIdentityAddClaim = await hre.ethers_sdr.getContractAt('Identity', await aliceIdentity.getAddress(), aliceWallet);
+  const aliceIdentityAddClaim = await hre.ethers.getContractAt('Identity', await aliceIdentity.getAddress(), aliceWallet);
   await aliceIdentityAddClaim.addClaim(claimForAlice.topic, claimForAlice.scheme, claimForAlice.issuer, claimForAlice.signature, claimForAlice.data, '');
 
   const claimForBob = {
@@ -255,25 +255,25 @@ async function deployFullSuiteFixture() {
 
 
   console.log('Adding claim')
-  const identityBob = await hre.ethers_sdr.getContractAt('Identity', await bobIdentity.getAddress(), bobWallet);
+  const identityBob = await hre.ethers.getContractAt('Identity', await bobIdentity.getAddress(), bobWallet);
   await identityBob.addClaim(claimForBob.topic, claimForBob.scheme, claimForBob.issuer, claimForBob.signature, claimForBob.data, '');
   console.log('Minting alice')
-  const tokenAgentWithSigner = await hre.ethers_sdr.getContractAt('Token', await token.getAddress(), tokenAgent);
+  const tokenAgentWithSigner = await hre.ethers.getContractAt('Token', await token.getAddress(), tokenAgent);
   await tokenAgentWithSigner.mint(await aliceWallet.getAddress(), 1000);
   console.log('Minting bob')
-  const tokenAgentWithSigner2 = await hre.ethers_sdr.getContractAt('Token', await token.getAddress(), tokenAgent);
+  const tokenAgentWithSigner2 = await hre.ethers.getContractAt('Token', await token.getAddress(), tokenAgent);
   await tokenAgentWithSigner2.mint(await bobWallet.getAddress(), 500);
   console.log('Add agent admin')
-  const agentManagerWithSigner = await hre.ethers_sdr.getContractAt('AgentManager', await agentManager.getAddress(), tokenAgent);
+  const agentManagerWithSigner = await hre.ethers.getContractAt('AgentManager', await agentManager.getAddress(), tokenAgent);
   await agentManagerWithSigner.addAgentAdmin(await tokenAdmin.getAddress());
   console.log('Add agent token')
-  const tokenWithSigner = await hre.ethers_sdr.getContractAt('Token', await token.getAddress(), deployer);
+  const tokenWithSigner = await hre.ethers.getContractAt('Token', await token.getAddress(), deployer);
   await tokenWithSigner.addAgent(await agentManager.getAddress());
   console.log('Add agent identity')
-  const identityWithSigner = await hre.ethers_sdr.getContractAt('IdentityRegistry', await identityRegistry.getAddress(), deployer);
+  const identityWithSigner = await hre.ethers.getContractAt('IdentityRegistry', await identityRegistry.getAddress(), deployer);
   await identityWithSigner.addAgent(await agentManager.getAddress());
   console.log('Unpause')
-  const tokenWithSignerAgent = await hre.ethers_sdr.getContractAt('Token', await token.getAddress(), tokenAgent);
+  const tokenWithSignerAgent = await hre.ethers.getContractAt('Token', await token.getAddress(), tokenAgent);
   await tokenWithSignerAgent.unpause();
   console.log('Finish with success.')
 

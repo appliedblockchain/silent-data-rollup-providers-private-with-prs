@@ -19,15 +19,15 @@ import {
 
 
 extendEnvironment((hre) => {
-  hre.ethers_sdr = lazyObject(() => {
+  hre.ethers = lazyObject(() => {
     const { ethers } = require("ethers") as typeof EthersT;
     const { HardhatEthersProvider } = require("./hardhat-sdr-provider") as {
       HardhatEthersProvider: typeof HardhatEthersProviderT;
     };
 
-    const provider = new HardhatEthersProvider(
+    const provider = new HardhatEthersProvider(      
       hre.network.name,
-      (hre.config.networks[hre.network.name] as any)['url'],
+      (hre.config.networks[hre.config.defaultNetwork] as any)['url'],
     );
 
     return {
