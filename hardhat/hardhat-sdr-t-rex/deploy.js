@@ -1,15 +1,75 @@
 const hre = require("hardhat");
-const OnchainID = require('@onchain-id/solidity');
-const ethers = require('ethers');
+const OnchainID = require("@onchain-id/solidity");
+const ethers = require("ethers");
 
 async function main() {
   try {
     const startDate = new Date();
-    const deploy = await deployFullSuiteFixture()
+    const deploy = await deployFullSuiteFixture();
     console.log(deploy);
-    const endDate   = new Date();
+    const endDate = new Date();
     const seconds = (endDate.getTime() - startDate.getTime()) / 1000;
-    console.log("Took ", seconds, " to deploy full suite of ERC-3643")
+    console.log("Took ", seconds, " to deploy full suite of ERC-3643");
+
+    const {
+      suite: { token },
+      accounts: { deployer, aliceWallet, bobWallet, anotherWallet, tokenAgent },
+    } = deploy;
+
+    let tx = await hre.ethers
+      .connect(token, aliceWallet)
+      .approve(anotherWallet.address, 100);
+    await tx.wait();
+    console.log("Approved anotherWallet to spend 100 tokens from aliceWallet");
+
+    // Check allowance
+    let allowance = await hre.ethers
+      .connect(token, aliceWallet)
+      .allowance(aliceWallet.address, anotherWallet.address);
+    console.log("Allowance:", allowance.toString());
+
+    // Transfer 100 tokens from aliceWallet to bobWallet
+    tx = await hre.ethers
+      .connect(token, aliceWallet)
+      .transfer(bobWallet.address, 100);
+    await tx.wait();
+    console.log("Transferred 100 tokens from aliceWallet to bobWallet");
+
+    // Pause the token by tokenAgent
+    tx = await hre.ethers.connect(token, tokenAgent).pause();
+    await tx.wait();
+    console.log("Token paused by tokenAgent");
+
+    // Try to transfer while paused (should fail)
+    try {
+      await hre.ethers
+        .connect(token, aliceWallet)
+        .transfer(bobWallet.address, 50);
+    } catch (error) {
+      console.log(
+        "Transfer failed as expected while token is paused:",
+        error.message
+      );
+    }
+
+    // Unpause the token
+    tx = await hre.ethers.connect(token, tokenAgent).unpause();
+    await tx.wait();
+    console.log("Token unpaused by tokenAgent");
+
+    // Mint 500 tokens to bobWallet
+    tx = await hre.ethers
+      .connect(token, tokenAgent)
+      .mint(bobWallet.address, 500);
+    await tx.wait();
+    console.log("Minted 500 tokens to bobWallet");
+
+    // Burn 200 tokens from bobWallet
+    tx = await hre.ethers
+      .connect(token, tokenAgent)
+      .burn(bobWallet.address, 200);
+    await tx.wait();
+    console.log("Burned 200 tokens from bobWallet");
   } catch (error) {
     console.error(error);
     process.exit(1);
@@ -18,73 +78,113 @@ async function main() {
 
 main();
 
-async function deployIdentityProxy(implementationAuthority, managementKey, signer) {
-  const identity = await hre.ethers.getContractFactory(OnchainID.contracts.IdentityProxy.abi, OnchainID.contracts.IdentityProxy.bytecode, signer);
+async function deployIdentityProxy(
+  implementationAuthority,
+  managementKey,
+  signer
+) {
+  const identity = await hre.ethers.getContractFactory(
+    OnchainID.contracts.IdentityProxy.abi,
+    OnchainID.contracts.IdentityProxy.bytecode,
+    signer
+  );
   const deployIdentity = await identity.deploy(
     implementationAuthority,
-    managementKey,
+    managementKey
   );
-  await deployIdentity.waitForDeployment()
-  
-  return hre.ethers.getContractAt('Identity', await deployIdentity.getAddress(), signer);
+  await deployIdentity.waitForDeployment();
+
+  return hre.ethers.getContractAt(
+    "Identity",
+    await deployIdentity.getAddress(),
+    signer
+  );
 }
 
-
 async function deployFullSuiteFixture() {
-  const [deployer, tokenIssuer, tokenAgent, tokenAdmin, claimIssuer, aliceWallet, bobWallet, charlieWallet, davidWallet, anotherWallet] =
-    await hre.ethers.getSigners();
+  const [
+    deployer,
+    tokenIssuer,
+    tokenAgent,
+    tokenAdmin,
+    claimIssuer,
+    aliceWallet,
+    bobWallet,
+    charlieWallet,
+    davidWallet,
+    anotherWallet,
+  ] = await hre.ethers.getSigners();
   const claimIssuerSigningKey = ethers.Wallet.createRandom();
   const aliceActionKey = ethers.Wallet.createRandom();
 
-  console.log('Before deploying implementations...')
+  console.log("Before deploying implementations...");
   // Deploy implementations
-  const claimTopicsRegistryImplementation = await hre.ethers.deployContract('ClaimTopicsRegistry', deployer);
+  const claimTopicsRegistryImplementation = await hre.ethers.deployContract(
+    "ClaimTopicsRegistry",
+    deployer
+  );
   await claimTopicsRegistryImplementation.waitForDeployment();
-  console.log("ClaimTopicsRegistry deployed...")
-  const trustedIssuersRegistryImplementation = await hre.ethers.deployContract('TrustedIssuersRegistry', deployer);
+  console.log("ClaimTopicsRegistry deployed...");
+  const trustedIssuersRegistryImplementation = await hre.ethers.deployContract(
+    "TrustedIssuersRegistry",
+    deployer
+  );
   await trustedIssuersRegistryImplementation.waitForDeployment();
-  console.log("TrustedIssuersRegistry deployed...")
-  const identityRegistryStorageImplementation = await hre.ethers.deployContract('IdentityRegistryStorage', deployer);
+  console.log("TrustedIssuersRegistry deployed...");
+  const identityRegistryStorageImplementation = await hre.ethers.deployContract(
+    "IdentityRegistryStorage",
+    deployer
+  );
   await identityRegistryStorageImplementation.waitForDeployment();
-  console.log("IdentityRegistryStorage deployed...")
-  const identityRegistryImplementation = await hre.ethers.deployContract('IdentityRegistry', deployer);
+  console.log("IdentityRegistryStorage deployed...");
+  const identityRegistryImplementation = await hre.ethers.deployContract(
+    "IdentityRegistry",
+    deployer
+  );
   await identityRegistryImplementation.waitForDeployment();
-  console.log("IdentityRegistry deployed...")
-  const modularComplianceImplementation = await hre.ethers.deployContract('ModularCompliance', deployer);
+  console.log("IdentityRegistry deployed...");
+  const modularComplianceImplementation = await hre.ethers.deployContract(
+    "ModularCompliance",
+    deployer
+  );
   await modularComplianceImplementation.waitForDeployment();
-  console.log("ModularCompliance deployed...")
-  const tokenImplementation = await hre.ethers.deployContract('Token', deployer);
+  console.log("ModularCompliance deployed...");
+  const tokenImplementation = await hre.ethers.deployContract(
+    "Token",
+    deployer
+  );
   await tokenImplementation.waitForDeployment();
-  console.log('After deploying implementations.')
+  console.log("After deploying implementations.");
 
   const identityImplementation = await new hre.ethers.ContractFactory(
     OnchainID.contracts.Identity.abi,
     OnchainID.contracts.Identity.bytecode,
-    deployer,
+    deployer
   ).deploy(await deployer.getAddress(), true);
   await identityImplementation.waitForDeployment();
-  console.log('After deploying identity.')
+  console.log("After deploying identity.");
   const identityImplementationAuthority = await new hre.ethers.ContractFactory(
     OnchainID.contracts.ImplementationAuthority.abi,
     OnchainID.contracts.ImplementationAuthority.bytecode,
-    deployer,
+    deployer
   ).deploy(await identityImplementation.getAddress());
   await identityImplementationAuthority.waitForDeployment();
-  console.log('After deploying identity authority.')
-  const identityFactory = await new hre.ethers.ContractFactory(OnchainID.contracts.Factory.abi, OnchainID.contracts.Factory.bytecode, deployer).deploy(
-    await identityImplementationAuthority.getAddress(),
-  );
+  console.log("After deploying identity authority.");
+  const identityFactory = await new hre.ethers.ContractFactory(
+    OnchainID.contracts.Factory.abi,
+    OnchainID.contracts.Factory.bytecode,
+    deployer
+  ).deploy(await identityImplementationAuthority.getAddress());
   await identityFactory.waitForDeployment();
 
-
-  console.log('After deploying identity factory.')
+  console.log("After deploying identity factory.");
   const trexImplementationAuthority = await hre.ethers.deployContract(
-    'TREXImplementationAuthority',
+    "TREXImplementationAuthority",
     [true, ethers.constants.AddressZero, ethers.constants.AddressZero],
-    deployer,
+    deployer
   );
   await trexImplementationAuthority.waitForDeployment();
-  console.log('After deploying trex authority.')
+  console.log("After deploying trex authority.");
   const versionStruct = {
     major: 4,
     minor: 0,
@@ -98,61 +198,108 @@ async function deployFullSuiteFixture() {
     tirImplementation: await trustedIssuersRegistryImplementation.getAddress(),
     mcImplementation: await modularComplianceImplementation.getAddress(),
   };
-  await hre.ethers.connect(trexImplementationAuthority, deployer).addAndUseTREXVersion(versionStruct, contractsStruct);
+  await hre.ethers
+    .connect(trexImplementationAuthority, deployer)
+    .addAndUseTREXVersion(versionStruct, contractsStruct);
 
-  const trexFactory = await hre.ethers.deployContract('TREXFactory', [await trexImplementationAuthority.getAddress(), await identityFactory.getAddress()], deployer);
+  const trexFactory = await hre.ethers.deployContract(
+    "TREXFactory",
+    [
+      await trexImplementationAuthority.getAddress(),
+      await identityFactory.getAddress(),
+    ],
+    deployer
+  );
   await trexFactory.waitForDeployment();
-  console.log('After deploying trex factory.')
+  console.log("After deploying trex factory.");
 
-  await hre.ethers.connect(identityFactory, deployer).addTokenFactory(await trexFactory.getAddress());
+  await hre.ethers
+    .connect(identityFactory, deployer)
+    .addTokenFactory(await trexFactory.getAddress());
 
   const claimTopicsRegistry = await hre.ethers
-    .deployContract('ClaimTopicsRegistryProxy', [await trexImplementationAuthority.getAddress()], deployer)
-    .then(async (proxy) => {
-      await proxy.waitForDeployment();
-      return hre.ethers.getContractAt('ClaimTopicsRegistry', await proxy.getAddress())
-    });
-  console.log('After deploying claim topics registry.')
-
-  const trustedIssuersRegistry = await hre.ethers
-    .deployContract('TrustedIssuersRegistryProxy', [await trexImplementationAuthority.getAddress()], deployer)
-    .then(async (proxy) => { 
-      await proxy.waitForDeployment();
-      return hre.ethers.getContractAt('TrustedIssuersRegistry', await proxy.getAddress())
-    });
-  console.log('After deploying trusted issuers registry.')
-  
-  const identityRegistryStorage = await hre.ethers
-    .deployContract('IdentityRegistryStorageProxy', [await trexImplementationAuthority.getAddress()], deployer)
-    .then(async (proxy) => {
-      await proxy.waitForDeployment();
-      return hre.ethers.getContractAt('IdentityRegistryStorage', await proxy.getAddress());
-    });
-  console.log('After deploying identity registry storage.')
-
-  const defaultCompliance = await hre.ethers.deployContract('DefaultCompliance', deployer);
-  await defaultCompliance.waitForDeployment()
-  console.log('After deploying default compliance.')
-
-  const identityRegistry = await hre.ethers
     .deployContract(
-      'IdentityRegistryProxy',
-      [await trexImplementationAuthority.getAddress(), await trustedIssuersRegistry.getAddress(), await claimTopicsRegistry.getAddress(), await identityRegistryStorage.getAddress()],
-      deployer,
+      "ClaimTopicsRegistryProxy",
+      [await trexImplementationAuthority.getAddress()],
+      deployer
     )
     .then(async (proxy) => {
       await proxy.waitForDeployment();
-      return hre.ethers.getContractAt('IdentityRegistry', await proxy.getAddress())
+      return hre.ethers.getContractAt(
+        "ClaimTopicsRegistry",
+        await proxy.getAddress()
+      );
     });
-  console.log('After deploying identity registry.')
+  console.log("After deploying claim topics registry.");
 
-  const tokenOID = await deployIdentityProxy(await identityImplementationAuthority.getAddress(), await tokenIssuer.getAddress(), deployer);
-  const tokenName = 'TREXDINO';
-  const tokenSymbol = 'TREX';
+  const trustedIssuersRegistry = await hre.ethers
+    .deployContract(
+      "TrustedIssuersRegistryProxy",
+      [await trexImplementationAuthority.getAddress()],
+      deployer
+    )
+    .then(async (proxy) => {
+      await proxy.waitForDeployment();
+      return hre.ethers.getContractAt(
+        "TrustedIssuersRegistry",
+        await proxy.getAddress()
+      );
+    });
+  console.log("After deploying trusted issuers registry.");
+
+  const identityRegistryStorage = await hre.ethers
+    .deployContract(
+      "IdentityRegistryStorageProxy",
+      [await trexImplementationAuthority.getAddress()],
+      deployer
+    )
+    .then(async (proxy) => {
+      await proxy.waitForDeployment();
+      return hre.ethers.getContractAt(
+        "IdentityRegistryStorage",
+        await proxy.getAddress()
+      );
+    });
+  console.log("After deploying identity registry storage.");
+
+  const defaultCompliance = await hre.ethers.deployContract(
+    "DefaultCompliance",
+    deployer
+  );
+  await defaultCompliance.waitForDeployment();
+  console.log("After deploying default compliance.");
+
+  const identityRegistry = await hre.ethers
+    .deployContract(
+      "IdentityRegistryProxy",
+      [
+        await trexImplementationAuthority.getAddress(),
+        await trustedIssuersRegistry.getAddress(),
+        await claimTopicsRegistry.getAddress(),
+        await identityRegistryStorage.getAddress(),
+      ],
+      deployer
+    )
+    .then(async (proxy) => {
+      await proxy.waitForDeployment();
+      return hre.ethers.getContractAt(
+        "IdentityRegistry",
+        await proxy.getAddress()
+      );
+    });
+  console.log("After deploying identity registry.");
+
+  const tokenOID = await deployIdentityProxy(
+    await identityImplementationAuthority.getAddress(),
+    await tokenIssuer.getAddress(),
+    deployer
+  );
+  const tokenName = "TREXDINO";
+  const tokenSymbol = "TREX";
   const tokenDecimals = BigInt("0");
   const token = await hre.ethers
     .deployContract(
-      'TokenProxy',
+      "TokenProxy",
       [
         await trexImplementationAuthority.getAddress(),
         await identityRegistry.getAddress(),
@@ -162,120 +309,242 @@ async function deployFullSuiteFixture() {
         tokenDecimals,
         await tokenOID.getAddress(),
       ],
-      deployer,
+      deployer
     )
     .then(async (proxy) => {
       await proxy.waitForDeployment();
-      return hre.ethers.getContractAt('Token', await proxy.getAddress())
+      return hre.ethers.getContractAt("Token", await proxy.getAddress());
     });
-  console.log('After deploying token proxy.')
+  console.log("After deploying token proxy.");
 
-  const agentManager = await hre.ethers.deployContract('AgentManager', [await token.getAddress()], tokenAgent);
+  const agentManager = await hre.ethers.deployContract(
+    "AgentManager",
+    [await token.getAddress()],
+    tokenAgent
+  );
   await agentManager.waitForDeployment();
-  console.log('After deploying agent manager.')
+  console.log("After deploying agent manager.");
 
-  await hre.ethers.connect(identityRegistryStorage, deployer).bindIdentityRegistry(await identityRegistry.getAddress());
-  console.log('After binding registry.')
+  await hre.ethers
+    .connect(identityRegistryStorage, deployer)
+    .bindIdentityRegistry(await identityRegistry.getAddress());
+  console.log("After binding registry.");
 
-  await hre.ethers.connect(token, deployer).addAgent(await tokenAgent.getAddress());
-  console.log('After adding agent.')
+  await hre.ethers
+    .connect(token, deployer)
+    .addAgent(await tokenAgent.getAddress());
+  console.log("After adding agent.");
 
-  const claimTopics = [ethers.utils.id('CLAIM_TOPIC')];
-  await hre.ethers.connect(claimTopicsRegistry, deployer).addClaimTopic(claimTopics[0]);
-  console.log('After adding claim topic.')
+  const claimTopics = [ethers.utils.id("CLAIM_TOPIC")];
+  await hre.ethers
+    .connect(claimTopicsRegistry, deployer)
+    .addClaimTopic(claimTopics[0]);
+  console.log("After adding claim topic.");
 
-  const claimIssuerContract = await hre.ethers.deployContract('ClaimIssuer', [await claimIssuer.getAddress()], claimIssuer);
+  const claimIssuerContract = await hre.ethers.deployContract(
+    "ClaimIssuer",
+    [await claimIssuer.getAddress()],
+    claimIssuer
+  );
   await claimIssuerContract.waitForDeployment();
-  console.log('After deploying claim issuer contract.')
+  console.log("After deploying claim issuer contract.");
 
-  await hre.ethers.connect(claimIssuerContract, claimIssuer)
-    .addKey(ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['address'], [await claimIssuerSigningKey.getAddress()])), 3, 1);
-  console.log('After adding key.')
+  await hre.ethers
+    .connect(claimIssuerContract, claimIssuer)
+    .addKey(
+      ethers.utils.keccak256(
+        ethers.utils.defaultAbiCoder.encode(
+          ["address"],
+          [await claimIssuerSigningKey.getAddress()]
+        )
+      ),
+      3,
+      1
+    );
+  console.log("After adding key.");
 
-  await hre.ethers.connect(trustedIssuersRegistry, deployer).addTrustedIssuer(await claimIssuerContract.getAddress(), claimTopics);
-  console.log('After adding trusted issuer.')
+  await hre.ethers
+    .connect(trustedIssuersRegistry, deployer)
+    .addTrustedIssuer(await claimIssuerContract.getAddress(), claimTopics);
+  console.log("After adding trusted issuer.");
 
-  const aliceIdentity = await deployIdentityProxy(await identityImplementationAuthority.getAddress(), await aliceWallet.getAddress(), deployer);
-  console.log('After deploying identity proxy alice.')
+  const aliceIdentity = await deployIdentityProxy(
+    await identityImplementationAuthority.getAddress(),
+    await aliceWallet.getAddress(),
+    deployer
+  );
+  console.log("After deploying identity proxy alice.");
 
-  const aliceIdentityWithSigner = await hre.ethers.getContractAt('Identity', await aliceIdentity.getAddress(), aliceWallet)
-  await aliceIdentityWithSigner.addKey(ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['address'], [await aliceActionKey.getAddress()])), 2, 1);
-  console.log('After adding key with Alice signer.')
+  const aliceIdentityWithSigner = await hre.ethers.getContractAt(
+    "Identity",
+    await aliceIdentity.getAddress(),
+    aliceWallet
+  );
+  await aliceIdentityWithSigner.addKey(
+    ethers.utils.keccak256(
+      ethers.utils.defaultAbiCoder.encode(
+        ["address"],
+        [await aliceActionKey.getAddress()]
+      )
+    ),
+    2,
+    1
+  );
+  console.log("After adding key with Alice signer.");
 
-  const bobIdentity = await deployIdentityProxy(await identityImplementationAuthority.getAddress(), await bobWallet.getAddress(), deployer);
-  console.log('After deploying identity proxy bob.')
-  const charlieIdentity = await deployIdentityProxy(await identityImplementationAuthority.getAddress(), await charlieWallet.getAddress(), deployer);
-  console.log('After deploying identity proxy charlie.')
+  const bobIdentity = await deployIdentityProxy(
+    await identityImplementationAuthority.getAddress(),
+    await bobWallet.getAddress(),
+    deployer
+  );
+  console.log("After deploying identity proxy bob.");
+  const charlieIdentity = await deployIdentityProxy(
+    await identityImplementationAuthority.getAddress(),
+    await charlieWallet.getAddress(),
+    deployer
+  );
+  console.log("After deploying identity proxy charlie.");
 
-  const identityRegistry1 = await hre.ethers.getContractAt('IdentityRegistry', await identityRegistry.getAddress(), deployer);
+  const identityRegistry1 = await hre.ethers.getContractAt(
+    "IdentityRegistry",
+    await identityRegistry.getAddress(),
+    deployer
+  );
   await identityRegistry1.addAgent(await tokenAgent.getAddress());
-  
-  const identityRegistry2 = await hre.ethers.getContractAt('IdentityRegistry', await identityRegistry.getAddress(), deployer);
+
+  const identityRegistry2 = await hre.ethers.getContractAt(
+    "IdentityRegistry",
+    await identityRegistry.getAddress(),
+    deployer
+  );
   await identityRegistry2.addAgent(await token.getAddress());
 
-  const identityRegistry3 = await hre.ethers.getContractAt('IdentityRegistry', await identityRegistry.getAddress(), tokenAgent);
-  await identityRegistry3.batchRegisterIdentity([await aliceWallet.getAddress(), await bobWallet.getAddress()], [await aliceIdentity.getAddress(), await bobIdentity.getAddress()], [42, 666]);
-  console.log('After batch register identity.')
+  const identityRegistry3 = await hre.ethers.getContractAt(
+    "IdentityRegistry",
+    await identityRegistry.getAddress(),
+    tokenAgent
+  );
+  await identityRegistry3.batchRegisterIdentity(
+    [await aliceWallet.getAddress(), await bobWallet.getAddress()],
+    [await aliceIdentity.getAddress(), await bobIdentity.getAddress()],
+    [42, 666]
+  );
+  console.log("After batch register identity.");
 
   const claimForAlice = {
-    data: ethers.utils.hexlify(ethers.utils.toUtf8Bytes('Some claim public data.')),
+    data: ethers.utils.hexlify(
+      ethers.utils.toUtf8Bytes("Some claim public data.")
+    ),
     issuer: await claimIssuerContract.getAddress(),
     topic: claimTopics[0],
     scheme: 1,
     identity: await aliceIdentity.getAddress(),
-    signature: '',
+    signature: "",
   };
   claimForAlice.signature = await claimIssuerSigningKey.signMessage(
     ethers.utils.arrayify(
       ethers.utils.keccak256(
-        ethers.utils.defaultAbiCoder.encode(['address', 'uint256', 'bytes'], [claimForAlice.identity, claimForAlice.topic, claimForAlice.data]),
-      ),
-    ),
+        ethers.utils.defaultAbiCoder.encode(
+          ["address", "uint256", "bytes"],
+          [claimForAlice.identity, claimForAlice.topic, claimForAlice.data]
+        )
+      )
+    )
   );
 
-  console.log("Adding alice identity claim")
-  const aliceIdentityAddClaim = await hre.ethers.getContractAt('Identity', await aliceIdentity.getAddress(), aliceWallet);
-  await aliceIdentityAddClaim.addClaim(claimForAlice.topic, claimForAlice.scheme, claimForAlice.issuer, claimForAlice.signature, claimForAlice.data, '');
+  console.log("Adding alice identity claim");
+  const aliceIdentityAddClaim = await hre.ethers.getContractAt(
+    "Identity",
+    await aliceIdentity.getAddress(),
+    aliceWallet
+  );
+  await aliceIdentityAddClaim.addClaim(
+    claimForAlice.topic,
+    claimForAlice.scheme,
+    claimForAlice.issuer,
+    claimForAlice.signature,
+    claimForAlice.data,
+    ""
+  );
 
   const claimForBob = {
-    data: ethers.utils.hexlify(ethers.utils.toUtf8Bytes('Some claim public data.')),
+    data: ethers.utils.hexlify(
+      ethers.utils.toUtf8Bytes("Some claim public data.")
+    ),
     issuer: await claimIssuerContract.getAddress(),
     topic: claimTopics[0],
     scheme: 1,
     identity: await bobIdentity.getAddress(),
-    signature: '',
+    signature: "",
   };
   claimForBob.signature = await claimIssuerSigningKey.signMessage(
     ethers.utils.arrayify(
       ethers.utils.keccak256(
-        ethers.utils.defaultAbiCoder.encode(['address', 'uint256', 'bytes'], [claimForBob.identity, claimForBob.topic, claimForBob.data]),
-      ),
-    ),
+        ethers.utils.defaultAbiCoder.encode(
+          ["address", "uint256", "bytes"],
+          [claimForBob.identity, claimForBob.topic, claimForBob.data]
+        )
+      )
+    )
   );
 
-
-  console.log('Adding claim')
-  const identityBob = await hre.ethers.getContractAt('Identity', await bobIdentity.getAddress(), bobWallet);
-  await identityBob.addClaim(claimForBob.topic, claimForBob.scheme, claimForBob.issuer, claimForBob.signature, claimForBob.data, '');
-  console.log('Minting alice')
-  const tokenAgentWithSigner = await hre.ethers.getContractAt('Token', await token.getAddress(), tokenAgent);
+  console.log("Adding claim");
+  const identityBob = await hre.ethers.getContractAt(
+    "Identity",
+    await bobIdentity.getAddress(),
+    bobWallet
+  );
+  await identityBob.addClaim(
+    claimForBob.topic,
+    claimForBob.scheme,
+    claimForBob.issuer,
+    claimForBob.signature,
+    claimForBob.data,
+    ""
+  );
+  console.log("Minting alice");
+  const tokenAgentWithSigner = await hre.ethers.getContractAt(
+    "Token",
+    await token.getAddress(),
+    tokenAgent
+  );
   await tokenAgentWithSigner.mint(await aliceWallet.getAddress(), 1000);
-  console.log('Minting bob')
-  const tokenAgentWithSigner2 = await hre.ethers.getContractAt('Token', await token.getAddress(), tokenAgent);
+  console.log("Minting bob");
+  const tokenAgentWithSigner2 = await hre.ethers.getContractAt(
+    "Token",
+    await token.getAddress(),
+    tokenAgent
+  );
   await tokenAgentWithSigner2.mint(await bobWallet.getAddress(), 500);
-  console.log('Add agent admin')
-  const agentManagerWithSigner = await hre.ethers.getContractAt('AgentManager', await agentManager.getAddress(), tokenAgent);
+  console.log("Add agent admin");
+  const agentManagerWithSigner = await hre.ethers.getContractAt(
+    "AgentManager",
+    await agentManager.getAddress(),
+    tokenAgent
+  );
   await agentManagerWithSigner.addAgentAdmin(await tokenAdmin.getAddress());
-  console.log('Add agent token')
-  const tokenWithSigner = await hre.ethers.getContractAt('Token', await token.getAddress(), deployer);
+  console.log("Add agent token");
+  const tokenWithSigner = await hre.ethers.getContractAt(
+    "Token",
+    await token.getAddress(),
+    deployer
+  );
   await tokenWithSigner.addAgent(await agentManager.getAddress());
-  console.log('Add agent identity')
-  const identityWithSigner = await hre.ethers.getContractAt('IdentityRegistry', await identityRegistry.getAddress(), deployer);
+  console.log("Add agent identity");
+  const identityWithSigner = await hre.ethers.getContractAt(
+    "IdentityRegistry",
+    await identityRegistry.getAddress(),
+    deployer
+  );
   await identityWithSigner.addAgent(await agentManager.getAddress());
-  console.log('Unpause')
-  const tokenWithSignerAgent = await hre.ethers.getContractAt('Token', await token.getAddress(), tokenAgent);
+  console.log("Unpause");
+  const tokenWithSignerAgent = await hre.ethers.getContractAt(
+    "Token",
+    await token.getAddress(),
+    tokenAgent
+  );
   await tokenWithSignerAgent.unpause();
-  console.log('Finish with success.')
+  console.log("Finish with success.");
 
   return {
     accounts: {
@@ -324,6 +593,54 @@ async function deployFullSuiteFixture() {
       identityRegistryImplementation,
       modularComplianceImplementation,
       tokenImplementation,
+    },
+  };
+}
+async function deploySuiteWithModularCompliancesFixture() {
+  const context = await loadFixture(deployFullSuiteFixture);
+
+  const complianceProxy = await ethers.deployContract(
+    "ModularComplianceProxy",
+    [context.authorities.trexImplementationAuthority.address]
+  );
+  const compliance = await ethers.getContractAt(
+    "ModularCompliance",
+    complianceProxy.address
+  );
+
+  const complianceBeta = await ethers.deployContract("ModularCompliance");
+  await complianceBeta.init();
+
+  return {
+    ...context,
+    suite: {
+      ...context.suite,
+      compliance,
+      complianceBeta,
+    },
+  };
+}
+
+async function deploySuiteWithModuleComplianceBoundToWallet() {
+  const context = await loadFixture(deployFullSuiteFixture);
+
+  const compliance = await ethers.deployContract("ModularCompliance");
+  await compliance.init();
+
+  const complianceModuleA = await ethers.deployContract("CountryAllowModule");
+  await compliance.addModule(complianceModuleA.address);
+  const complianceModuleB = await ethers.deployContract("CountryAllowModule");
+  await compliance.addModule(complianceModuleB.address);
+
+  await compliance.bindToken(context.accounts.charlieWallet.address);
+
+  return {
+    ...context,
+    suite: {
+      ...context.suite,
+      compliance,
+      complianceModuleA,
+      complianceModuleB,
     },
   };
 }
