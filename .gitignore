@@ -11,6 +11,7 @@ hardhat/hardhat-sdr-usage/hardhat.config.js
 hardhat/hardhat-sdr-usage/package-lock.json
 hardhat/hardhat-sdr-usage/cache
 hardhat/hardhat-sdr-usage/artifacts
-hardhat/ERC-3643
 hardhat/hardhat-sdr-t-rex/hardhat.config.js
 hardhat/hardhat-sdr-t-rex/hardhat.config.ts
+# React Component Preview
+previewConfig.json

@@ -6,70 +6,98 @@ async function main() {
   try {
     const startDate = new Date();
     const deploy = await deployFullSuiteFixture();
-    console.log(deploy);
     const endDate = new Date();
     const seconds = (endDate.getTime() - startDate.getTime()) / 1000;
-    console.log("Took ", seconds, " to deploy full suite of ERC-3643");
+    console.log("Took ", seconds, " to deploy full suite of ERC-3643\n");
 
     const {
-      suite: { token },
-      accounts: { deployer, aliceWallet, bobWallet, anotherWallet, tokenAgent },
+      suite: { token, identityRegistry, claimForBob },
+      accounts: { deployer, aliceWallet, bobWallet, anotherWallet },
+      identities: { bobIdentity },
+      implementations: { modularComplianceImplementation },
     } = deploy;
+
+    console.log("Starting Tests:\n");
+
+    const privateModule = await hre.ethers.deployContract(
+      "SupplyLimitModule",
+      deployer
+    );
+    console.log("Deployed SupplyLimitModule");
+    await privateModule.waitForDeployment();
+
+    await hre.ethers.connect(modularComplianceImplementation, deployer).init();
+
+    await hre.ethers
+      .connect(modularComplianceImplementation, deployer)
+      .addModule(await privateModule.getAddress());
+    console.log("Added privateModule to ModularCompliance");
+
+    await hre.ethers
+      .connect(privateModule, deployer)
+      .initialize(await modularComplianceImplementation.getAddress());
+    console.log("Initialized privateModule, ensuring only MC can check it.");
+
+    await hre.ethers
+      .connect(token, deployer)
+      .setCompliance(await modularComplianceImplementation.getAddress());
+
+    console.log("Bound token contract to ModularCompliance.");
+
+    try {
+      await hre.ethers
+        .connect(privateModule, deployer)
+        .moduleCheck(
+          await bobWallet.getAddress(),
+          await aliceWallet.getAddress(),
+          1,
+          await modularComplianceImplementation.getAddress()
+        );
+    } catch (error) {
+      console.log(
+        "Trying to check the private module straight from any address other than the MC is unauthorized, as expected."
+      );
+    }
+
+    const accessOIDwBob = await hre.ethers.getContractAt(
+      "Identity",
+      await bobIdentity.getAddress(),
+      bobWallet
+    );
+
+    const claimId = ethers.utils.keccak256(
+      ethers.utils.defaultAbiCoder.encode(
+        ["address", "uint256"],
+        [claimForBob.issuer, claimForBob.topic]
+      )
+    );
+
+    try {
+      await accessOIDwBob.getClaim(claimId);
+    } catch (error) {
+      console.log(
+        "Trying to get a claim straight from an unauthorized address is not possible, as expected:"
+      );
+    }
 
     let tx = await hre.ethers
       .connect(token, aliceWallet)
       .approve(anotherWallet.address, 100);
     await tx.wait();
-    console.log("Approved anotherWallet to spend 100 tokens from aliceWallet");
 
-    // Check allowance
     let allowance = await hre.ethers
       .connect(token, aliceWallet)
       .allowance(aliceWallet.address, anotherWallet.address);
-    console.log("Allowance:", allowance.toString());
 
-    // Transfer 100 tokens from aliceWallet to bobWallet
+    console.log(
+      "Starting a token transfer, which will require the configured contracts to call the functions for accessing modules and identity claims, which regular addresses were not allowed to."
+    );
+
     tx = await hre.ethers
       .connect(token, aliceWallet)
       .transfer(bobWallet.address, 100);
     await tx.wait();
     console.log("Transferred 100 tokens from aliceWallet to bobWallet");
-
-    // Pause the token by tokenAgent
-    tx = await hre.ethers.connect(token, tokenAgent).pause();
-    await tx.wait();
-    console.log("Token paused by tokenAgent");
-
-    // Try to transfer while paused (should fail)
-    try {
-      await hre.ethers
-        .connect(token, aliceWallet)
-        .transfer(bobWallet.address, 50);
-    } catch (error) {
-      console.log(
-        "Transfer failed as expected while token is paused:",
-        error.message
-      );
-    }
-
-    // Unpause the token
-    tx = await hre.ethers.connect(token, tokenAgent).unpause();
-    await tx.wait();
-    console.log("Token unpaused by tokenAgent");
-
-    // Mint 500 tokens to bobWallet
-    tx = await hre.ethers
-      .connect(token, tokenAgent)
-      .mint(bobWallet.address, 500);
-    await tx.wait();
-    console.log("Minted 500 tokens to bobWallet");
-
-    // Burn 200 tokens from bobWallet
-    tx = await hre.ethers
-      .connect(token, tokenAgent)
-      .burn(bobWallet.address, 200);
-    await tx.wait();
-    console.log("Burned 200 tokens from bobWallet");
   } catch (error) {
     console.error(error);
     process.exit(1);
@@ -117,44 +145,42 @@ async function deployFullSuiteFixture() {
   const claimIssuerSigningKey = ethers.Wallet.createRandom();
   const aliceActionKey = ethers.Wallet.createRandom();
 
-  console.log("Before deploying implementations...");
-  // Deploy implementations
   const claimTopicsRegistryImplementation = await hre.ethers.deployContract(
     "ClaimTopicsRegistry",
     deployer
   );
   await claimTopicsRegistryImplementation.waitForDeployment();
-  console.log("ClaimTopicsRegistry deployed...");
+  console.log("Deployed ClaimTopicsRegistry.");
   const trustedIssuersRegistryImplementation = await hre.ethers.deployContract(
     "TrustedIssuersRegistry",
     deployer
   );
   await trustedIssuersRegistryImplementation.waitForDeployment();
-  console.log("TrustedIssuersRegistry deployed...");
+  console.log("Deployed TrustedIssuersRegistry.");
   const identityRegistryStorageImplementation = await hre.ethers.deployContract(
     "IdentityRegistryStorage",
     deployer
   );
   await identityRegistryStorageImplementation.waitForDeployment();
-  console.log("IdentityRegistryStorage deployed...");
+  console.log("Deployed IdentityRegistryStorage.");
   const identityRegistryImplementation = await hre.ethers.deployContract(
     "IdentityRegistry",
     deployer
   );
   await identityRegistryImplementation.waitForDeployment();
-  console.log("IdentityRegistry deployed...");
+  console.log("Deployed IdentityRegistry.");
   const modularComplianceImplementation = await hre.ethers.deployContract(
     "ModularCompliance",
     deployer
   );
   await modularComplianceImplementation.waitForDeployment();
-  console.log("ModularCompliance deployed...");
+  console.log("Deployed ModularCompliance.");
   const tokenImplementation = await hre.ethers.deployContract(
     "Token",
     deployer
   );
   await tokenImplementation.waitForDeployment();
-  console.log("After deploying implementations.");
+  console.log("Deployed Token.");
 
   const identityImplementation = await new hre.ethers.ContractFactory(
     OnchainID.contracts.Identity.abi,
@@ -162,14 +188,14 @@ async function deployFullSuiteFixture() {
     deployer
   ).deploy(await deployer.getAddress(), true);
   await identityImplementation.waitForDeployment();
-  console.log("After deploying identity.");
+  console.log("Deployed Identity.");
   const identityImplementationAuthority = await new hre.ethers.ContractFactory(
     OnchainID.contracts.ImplementationAuthority.abi,
     OnchainID.contracts.ImplementationAuthority.bytecode,
     deployer
   ).deploy(await identityImplementation.getAddress());
   await identityImplementationAuthority.waitForDeployment();
-  console.log("After deploying identity authority.");
+  console.log("Deployed IdentityAuthority.");
   const identityFactory = await new hre.ethers.ContractFactory(
     OnchainID.contracts.Factory.abi,
     OnchainID.contracts.Factory.bytecode,
@@ -177,14 +203,14 @@ async function deployFullSuiteFixture() {
   ).deploy(await identityImplementationAuthority.getAddress());
   await identityFactory.waitForDeployment();
 
-  console.log("After deploying identity factory.");
+  console.log("Deployed IdentityFactory.");
   const trexImplementationAuthority = await hre.ethers.deployContract(
     "TREXImplementationAuthority",
     [true, ethers.constants.AddressZero, ethers.constants.AddressZero],
     deployer
   );
   await trexImplementationAuthority.waitForDeployment();
-  console.log("After deploying trex authority.");
+  console.log("Deployed TrexAuthority.");
   const versionStruct = {
     major: 4,
     minor: 0,
@@ -211,7 +237,7 @@ async function deployFullSuiteFixture() {
     deployer
   );
   await trexFactory.waitForDeployment();
-  console.log("After deploying trex factory.");
+  console.log("Deployed TrexFactory.");
 
   await hre.ethers
     .connect(identityFactory, deployer)
@@ -230,7 +256,7 @@ async function deployFullSuiteFixture() {
         await proxy.getAddress()
       );
     });
-  console.log("After deploying claim topics registry.");
+  console.log("Deployed ClaimTopicsRegistry.");
 
   const trustedIssuersRegistry = await hre.ethers
     .deployContract(
@@ -245,7 +271,7 @@ async function deployFullSuiteFixture() {
         await proxy.getAddress()
       );
     });
-  console.log("After deploying trusted issuers registry.");
+  console.log("Deployed TrustedIssuersRegistry.");
 
   const identityRegistryStorage = await hre.ethers
     .deployContract(
@@ -260,14 +286,14 @@ async function deployFullSuiteFixture() {
         await proxy.getAddress()
       );
     });
-  console.log("After deploying identity registry storage.");
+  console.log("Deployed IdentityRegistryStorage.");
 
   const defaultCompliance = await hre.ethers.deployContract(
     "DefaultCompliance",
     deployer
   );
   await defaultCompliance.waitForDeployment();
-  console.log("After deploying default compliance.");
+  console.log("Deployed DefaultCompliance.");
 
   const identityRegistry = await hre.ethers
     .deployContract(
@@ -287,7 +313,7 @@ async function deployFullSuiteFixture() {
         await proxy.getAddress()
       );
     });
-  console.log("After deploying identity registry.");
+  console.log("Deployed IdentityRegistry.");
 
   const tokenOID = await deployIdentityProxy(
     await identityImplementationAuthority.getAddress(),
@@ -315,7 +341,7 @@ async function deployFullSuiteFixture() {
       await proxy.waitForDeployment();
       return hre.ethers.getContractAt("Token", await proxy.getAddress());
     });
-  console.log("After deploying token proxy.");
+  console.log("Deployed TokenProxy.");
 
   const agentManager = await hre.ethers.deployContract(
     "AgentManager",
@@ -323,23 +349,23 @@ async function deployFullSuiteFixture() {
     tokenAgent
   );
   await agentManager.waitForDeployment();
-  console.log("After deploying agent manager.");
+  console.log("Deployed AgentManager.");
 
   await hre.ethers
     .connect(identityRegistryStorage, deployer)
     .bindIdentityRegistry(await identityRegistry.getAddress());
-  console.log("After binding registry.");
+  console.log("Binded registry.");
 
   await hre.ethers
     .connect(token, deployer)
     .addAgent(await tokenAgent.getAddress());
-  console.log("After adding agent.");
+  console.log("Added agent.");
 
   const claimTopics = [ethers.utils.id("CLAIM_TOPIC")];
   await hre.ethers
     .connect(claimTopicsRegistry, deployer)
     .addClaimTopic(claimTopics[0]);
-  console.log("After adding claim topic.");
+  console.log("Added claim topic.");
 
   const claimIssuerContract = await hre.ethers.deployContract(
     "ClaimIssuer",
@@ -347,7 +373,7 @@ async function deployFullSuiteFixture() {
     claimIssuer
   );
   await claimIssuerContract.waitForDeployment();
-  console.log("After deploying claim issuer contract.");
+  console.log("Deployed ClaimIssuer contract.");
 
   await hre.ethers
     .connect(claimIssuerContract, claimIssuer)
@@ -373,7 +399,6 @@ async function deployFullSuiteFixture() {
     await aliceWallet.getAddress(),
     deployer
   );
-  console.log("After deploying identity proxy alice.");
 
   const aliceIdentityWithSigner = await hre.ethers.getContractAt(
     "Identity",
@@ -397,13 +422,13 @@ async function deployFullSuiteFixture() {
     await bobWallet.getAddress(),
     deployer
   );
-  console.log("After deploying identity proxy bob.");
+  console.log("Deployed identity proxy bob.");
   const charlieIdentity = await deployIdentityProxy(
     await identityImplementationAuthority.getAddress(),
     await charlieWallet.getAddress(),
     deployer
   );
-  console.log("After deploying identity proxy charlie.");
+  console.log("Deployed identity proxy charlie.");
 
   const identityRegistry1 = await hre.ethers.getContractAt(
     "IdentityRegistry",
@@ -467,6 +492,12 @@ async function deployFullSuiteFixture() {
     ""
   );
 
+  await aliceIdentityAddClaim.authorizeEntity(identityRegistry1);
+  await aliceIdentityAddClaim.authorizeEntity(identityRegistry2);
+  await aliceIdentityAddClaim.authorizeEntity(identityRegistry3);
+
+  console.log("Deployed identity proxy alice.");
+
   const claimForBob = {
     data: ethers.utils.hexlify(
       ethers.utils.toUtf8Bytes("Some claim public data.")
@@ -502,6 +533,11 @@ async function deployFullSuiteFixture() {
     claimForBob.data,
     ""
   );
+
+  await identityBob.authorizeEntity(identityRegistry1);
+  await identityBob.authorizeEntity(identityRegistry2);
+  await identityBob.authorizeEntity(identityRegistry3);
+
   console.log("Minting alice");
   const tokenAgentWithSigner = await hre.ethers.getContractAt(
     "Token",
@@ -524,12 +560,12 @@ async function deployFullSuiteFixture() {
   );
   await agentManagerWithSigner.addAgentAdmin(await tokenAdmin.getAddress());
   console.log("Add agent token");
-  const tokenWithSigner = await hre.ethers.getContractAt(
+  const tokenWithSignerDeployer = await hre.ethers.getContractAt(
     "Token",
     await token.getAddress(),
     deployer
   );
-  await tokenWithSigner.addAgent(await agentManager.getAddress());
+  await tokenWithSignerDeployer.addAgent(await agentManager.getAddress());
   console.log("Add agent identity");
   const identityWithSigner = await hre.ethers.getContractAt(
     "IdentityRegistry",
@@ -576,6 +612,7 @@ async function deployFullSuiteFixture() {
       tokenOID,
       token,
       agentManager,
+      claimForBob,
     },
     authorities: {
       trexImplementationAuthority,
@@ -596,6 +633,7 @@ async function deployFullSuiteFixture() {
     },
   };
 }
+
 async function deploySuiteWithModularCompliancesFixture() {
   const context = await loadFixture(deployFullSuiteFixture);
 
