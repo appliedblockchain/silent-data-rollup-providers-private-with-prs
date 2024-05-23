@@ -20,7 +20,8 @@ To exemplify these behaviours, we made some changes on the **hardhat/ERC-3643/co
 To properly setup the environment and run the script that deploys the contracts and performs the interactions, execute the following script with your personal SilentData Rollup token passed as argument:
 
 ```bash
-./hardhat/deploy_trex.sh <SILENT_DATA_ROLLUP_TOKEN>
+cd hardhat
+./deploy_trex.sh <SILENT_DATA_ROLLUP_TOKEN>
 ```
 
 After running, you'll be able to see the contracts deployed and the following interactions leading to a ERC-3643 token transfer:
@@ -31,4 +32,5 @@ After running, you'll be able to see the contracts deployed and the following in
 4. Performing a token transfer is successful, which requires the MC contract to get the private module and the IdentityRegistry to get the Identity claim. Both actions that were negated to unauthorized addresses.
 
 Here is a screenshot of the expected output: flow:
+
 ![alt text](image.png)
