@@ -27,8 +27,7 @@
     "lint:ts-fix": "eslint \"test/**/*.ts\" --fix",
     "lint": "npm run lint:sol",
     "lint:sol": "solhint \"contracts/**/*.sol\"",
-    "docs": "hardhat dodoc",
-    "prepare": "husky install"
+    "docs": "hardhat dodoc"
   },
   "repository": {
     "type": "git",
@@ -63,7 +62,6 @@
     "fs-extra": "^11.1.1",
     "glob": "^10.2.6",
     "hardhat": "2.22.3",
-    "husky": "^8.0.3",
     "lint-staged": "^13.2.2",
     "prettier": "^2.8.8",
     "prettier-plugin-solidity": "^1.1.3",
