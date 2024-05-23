@@ -4,7 +4,8 @@ import {
   SilentDataRollupRPCProvider,
   DEFAULT_SIGN_METHODS,
   deployContract,
-  getContract
+  getContract,
+  FireblocksSigner
 } from 'connector'
 
 import PrivateTokenArtifact from "../contracts/compiled/PrivateToken.json";
@@ -57,5 +58,6 @@ export {
   getTokenBalance,
   sendTransaction,
   SilentDataRollupRPCProvider,
+  FireblocksSigner,
   DEFAULT_SIGN_METHODS
 }

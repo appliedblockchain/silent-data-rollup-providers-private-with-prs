@@ -3,11 +3,47 @@ import {
   SilentDataRollupRPCProvider,
   deployContract,
   getContract,
-  DEFAULT_SIGN_METHODS } from '../src/index'
+  DEFAULT_SIGN_METHODS,
+  FireblocksSigner
+} from '../src/index'
 
 import PrivateTokenArtifact from '../contracts/PrivateToken.json'
 import { ethers } from 'ethers'
 import 'dotenv/config'
+
+import {
+  Fireblocks
+} from "@fireblocks/ts-sdk";
+
+jest.mock('@fireblocks/ts-sdk', () => {
+  return {
+    TransactionOperation: {
+      Raw: 'RAW_OPERATION',
+    },
+    TransferPeerPathType: {
+      VaultAccount: 'VAULT_ACCOUNT'
+    },
+    TransactionStateEnum: {
+      Completed: 'COMPLETED',
+      Cancelled: 'CANCELLED',
+      Cancelling: 'CANCELLING',
+      Failed: 'FAILED',
+      Rejected: 'REJECTED',
+      Timeout: 'TIMEOUT'
+    },
+    Fireblocks: jest.fn().mockImplementation(() => {
+      return {
+        vaults: {
+          getVaultAccountAssetAddressesPaginated: jest.fn(),
+        },
+        transactions: {
+          createTransaction: jest.fn(),
+          getTransaction: jest.fn()
+        }
+      };
+    }),
+  };
+});
 
 const RPC_URL = process.env.RPC_URL
 const NETWORK_NAME = process.env.NETWORK_NAME
@@ -158,6 +194,145 @@ describe('Provider', () => {
     expect(contract).toBeInstanceOf(ethers.Contract)
 
     await expect(contract.balanceOf(signer)).rejects.toMatchInlineSnapshot(`[Error: {"code":3,"message":"execution reverted: PrivateToken: balance query for non-owner","data":"0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002950726976617465546f6b656e3a2062616c616e636520717565727920666f72206e6f6e2d6f776e65720000000000000000000000000000000000000000000000"}]`)      
+  })
+
+  describe('Fireblocks', () => {
+
+    let fireblocks: Fireblocks
+
+    const fireblocksVaultAccountId = 'testVaultId';
+    const fireblocksAssetId = 'testAssetId';
+  
+    beforeEach(() => {
+      fireblocks = new Fireblocks();
+    });  
+    
+    it("get vault account asset addresses", async () => {
+      const spy = jest
+        .spyOn(fireblocks.vaults, "getVaultAccountAssetAddressesPaginated")
+        .mockResolvedValue({
+          statusCode: 200,
+          headers: {},
+          data: {
+            addresses: [
+              {
+                assetId: "ETH_TEST5",
+                address: "0x7f3c034a75136b9af07dD912FbCf2F80ad68EDef",
+                description: "",
+                tag: "",
+                type: "Permanent",
+                legacyAddress: "",
+                enterpriseAddress: "",
+                bip44AddressIndex: 0,
+                userDefined: false,
+              },
+            ],
+          },
+        });
+
+      let addresses = (
+        await fireblocks.vaults.getVaultAccountAssetAddressesPaginated({
+          vaultAccountId: fireblocksVaultAccountId,
+          assetId: fireblocksAssetId,
+        })
+      ).data.addresses;
+
+      expect(spy).toHaveBeenCalledWith({
+        vaultAccountId: fireblocksVaultAccountId,
+        assetId: fireblocksAssetId,
+      });
+      expect(addresses).toEqual([
+        {
+          assetId: "ETH_TEST5",
+          address: "0x7f3c034a75136b9af07dD912FbCf2F80ad68EDef",
+          description: "",
+          tag: "",
+          type: "Permanent",
+          legacyAddress: "",
+          enterpriseAddress: "",
+          bip44AddressIndex: 0,
+          userDefined: false,
+        },
+      ]);
+
+    });
+
+    it("sign a transaction", async () => { 
+
+      const transactionId = 'transactionId';
+      const signedMessage = {
+        r: 'r_value',
+        s: 's_value',
+        v: 1
+      };
+
+      const spyCreateTransaction = jest.spyOn(fireblocks.transactions, "createTransaction").mockResolvedValue({
+        statusCode: 200,
+        headers: {},
+        data: { id: transactionId }
+      });
+
+      const spyGetTransaction = jest.spyOn(fireblocks.transactions, "getTransaction").mockResolvedValue({
+        statusCode: 200,
+        headers: {},
+        data: {
+          status: 'COMPLETED',
+          signedMessages: [{ signature: signedMessage }]
+        }
+      });
+
+      const fireblocksSigner: FireblocksSigner = {
+        fireblocks,
+        assetId: fireblocksAssetId,
+        vaultAccountId: fireblocksVaultAccountId
+      }
+
+      provider.setSigner(fireblocksSigner)
+
+      await expect(provider.getBalance("0x7f3c034a75136b9af07dD912FbCf2F80ad68EDef")).rejects.toMatchInlineSnapshot(`[Error: {"code":-16098,"message":"invalid hex string","data":"Custom RPC"}]`)
+      expect(spyCreateTransaction).toHaveBeenCalledTimes(1);
+      expect(spyGetTransaction).toHaveBeenCalledTimes(1);
+      expect(spyGetTransaction).toHaveBeenCalledWith({
+        txId: transactionId
+      });
+      
+    })
+
+    it("sign a transaction but its rejected", async () => { 
+
+      const transactionId = 'transactionId';
+
+      const spyCreateTransaction = jest.spyOn(fireblocks.transactions, "createTransaction").mockResolvedValue({
+        statusCode: 200,
+        headers: {},
+        data: { id: transactionId }
+      });
+
+      const spyGetTransaction = jest.spyOn(fireblocks.transactions, "getTransaction").mockResolvedValue({
+        statusCode: 400,
+        headers: {},
+        data: {
+          status: 'REJECTED',
+        }
+      });
+
+      const fireblocksSigner: FireblocksSigner = {
+        fireblocks,
+        assetId: fireblocksAssetId,
+        vaultAccountId: fireblocksVaultAccountId
+      }
+
+      provider.setSigner(fireblocksSigner)
+
+      await expect(provider.getBalance("0x7f3c034a75136b9af07dD912FbCf2F80ad68EDef")).rejects.toMatchInlineSnapshot(`[Error: Fireblocks failure. Tx id transactionId REJECTED]`)
+      expect(spyCreateTransaction).toHaveBeenCalledTimes(1);
+      expect(spyGetTransaction).toHaveBeenCalledTimes(1);
+      expect(spyGetTransaction).toHaveBeenCalledWith({
+        txId: transactionId
+      });
+
+    })
+  
   })
 
 })

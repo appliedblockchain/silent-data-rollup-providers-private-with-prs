@@ -56,6 +56,15 @@ cast --version
 
   Should be the value 51966
 
+- **FIREBLOCKS_API_KEY**
+
+  To get the FIREBLOCKS_API_KEY you should go to the Fireblocks dashboard (https://sandbox.fireblocks.io/v2/developer/api-users) and create an api user (with editor role) with sign permissions. Download the private key file generated for the user. 
+
+- **FIREBLOCKS_SECRET_KEY_PATH**
+
+  The private key file generated for the api user created. Default value is `fireblocks_secret.key`
+  The file should be copied and pasted in the `/app` folder
+
 
 # Important: Environment Setup
 
@@ -68,6 +77,13 @@ cast --version
 7) Open the created file **.env**
 8) On the first variable named **RPC_URL**, just replace **&lt;your-token&gt;** with your actual token copied from step 5.
 
+For Fireblocks
+1) Signup/Login at https://www.fireblocks.com/
+2) Go to Developer Center -> API users
+3) Add a new user (select Editor Role)
+4) Download the CSR private key file generated
+5) Paste the file in the `/app` folder 
+6) Check that the **FIREBLOCKS_SECRET_KEY_PATH** and the name of the file is the same
 
 # Installation 
 
@@ -241,4 +257,42 @@ const tx = await signer.sendTransaction({
   to: '<send-to-address>',
   value: ethers.parseUnits('0.001', 'ether'),
 });
+```
+
+## Using Fireblocks wallet
+```ts
+// config and init the fireblocks api sdk
+const FIREBLOCKS_API_KEY = process.env.FIREBLOCKS_API_KEY;
+const FIREBLOCKS_SECRET_KEY_PATH = process.env.FIREBLOCKS_SECRET_KEY_PATH;
+const FIREBLOCKS_SECRET_KEY = readFileSync(resolve(FIREBLOCKS_SECRET_KEY_PATH!), "utf-8");
+
+const fireblocks = new Fireblocks({
+  apiKey: FIREBLOCKS_API_KEY,
+  secretKey: FIREBLOCKS_SECRET_KEY,
+  basePath: BasePath.Sandbox,
+});
+
+// create the fireblocks signer with the asset and account selected
+const fireblocksSigner: FireblocksSigner = {
+  fireblocks,
+  assetId: fireblocksAssetId,
+  vaultAccountId: fireblocksVaultAccountId
+}
+// set the fireblocks signer
+provider.setSigner(fireblocksSigner)
+
+let addresses = (await fireblocks.vaults.getVaultAccountAssetAddressesPaginated({
+  vaultAccountId: fireblocksVaultAccountId,
+  assetId: fireblocksAssetId
+})).data.addresses
+
+// get the wallet address to use based on the assetId and vaultAccountId selected
+let wallet: string = ''
+if (addresses && addresses.length > 0) {
+  wallet = addresses[0].address as string
+}
+
+// use the getContract or any RPC interaction as usual with the VoidSigner 
+const signer = new ethers.VoidSigner(wallet, provider)
+
 ```

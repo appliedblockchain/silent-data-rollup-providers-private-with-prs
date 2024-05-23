@@ -1,4 +1,4 @@
-import { SilentDataRollupRPCProvider } from "./provider";
+import { SilentDataRollupRPCProvider, FireblocksSigner } from "./provider";
 import { ethers, TransactionReceipt } from "ethers";
 
 const DEFAULT_SIGN_METHODS = [
@@ -53,4 +53,5 @@ export {
   waitTransactionReceipt,
   SilentDataRollupRPCProvider,
   DEFAULT_SIGN_METHODS,
+  FireblocksSigner
 }
