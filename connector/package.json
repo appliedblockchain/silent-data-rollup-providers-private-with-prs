@@ -12,6 +12,7 @@
     "test": "jest --runInBand"
   },
   "dependencies": {
+    "@fireblocks/ts-sdk": "^2.0.0",
     "dotenv": "^16.4.1",
     "ethers": "^6.10.0",
     "node-fetch": "2"

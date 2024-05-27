@@ -3,8 +3,15 @@ import input from '@inquirer/input';
 import dotenv from "dotenv";
 import { ethers } from "ethers";
 dotenv.config({ path: "../.env" });
+import { readFileSync } from "fs";
+import { resolve } from 'path';
 
-import { getETHBalance, deploy, getTokenBalance, sendTransaction, SilentDataRollupRPCProvider, DEFAULT_SIGN_METHODS } from "./interactions";
+import { getETHBalance, deploy, getTokenBalance, sendTransaction, SilentDataRollupRPCProvider, DEFAULT_SIGN_METHODS, FireblocksSigner } from "./interactions";
+
+import {
+  BasePath,
+  Fireblocks
+} from "@fireblocks/ts-sdk";
 
 const run = async () => {
   const RPC_URL = process.env.RPC_URL;
@@ -39,6 +46,11 @@ const run = async () => {
         description: "get the signer token balance of a contract address",
       },
       {
+        name: "Get Token Balance with Fireblocks",
+        value: "token-balance-fireblocks",
+        description: "get the signer token balance of a contract address using Fireblocks",
+      },
+      {
         name: "Deploy Private Token Contract",
         value: "deploy",
         description: "deploy a contract to the network",
@@ -49,6 +61,62 @@ const run = async () => {
   const provider = new SilentDataRollupRPCProvider(RPC_URL, NETWORK_NAME, CHAIN_ID, DEFAULT_SIGN_METHODS)
 
   switch (answer) {
+    case "token-balance-fireblocks":
+
+    const FIREBLOCKS_API_KEY = process.env.FIREBLOCKS_API_KEY;
+    const FIREBLOCKS_SECRET_KEY_PATH = process.env.FIREBLOCKS_SECRET_KEY_PATH;
+    const FIREBLOCKS_SECRET_KEY = readFileSync(resolve(FIREBLOCKS_SECRET_KEY_PATH!), "utf-8");
+    
+    const fireblocks = new Fireblocks({
+      apiKey: FIREBLOCKS_API_KEY,
+      secretKey: FIREBLOCKS_SECRET_KEY,
+      basePath: BasePath.Sandbox,
+    });
+
+      console.log("Insert the asset ID")
+      const fireblocksAssetId = await input({
+        message: 'Asset ID:', 
+        default: 'ETH_TEST5'
+      });
+
+      console.log("Insert the vault account ID")
+      const fireblocksVaultAccountId = await input({
+        message: 'Vault Account ID:', 
+        default: '0'
+      });
+      
+      let addresses = (await fireblocks.vaults.getVaultAccountAssetAddressesPaginated({
+        vaultAccountId: fireblocksVaultAccountId,
+        assetId: fireblocksAssetId
+      })).data.addresses
+
+      let wallet: string = ''
+      if (addresses && addresses.length > 0) {
+        wallet = addresses[0].address as string
+      }
+      console.log('Address: ', JSON.stringify(wallet, null, 2));
+
+      console.log("Insert the address of the deployed contract")
+      const contractAddressFireblocks = await input({
+        message: 'Contract Address:',        
+      });
+
+      console.log("Insert the wallet address that you want to use check the token balance")
+      const walletAddressFireblocks = await input({
+        message: 'Wallet Address:',
+        default: wallet
+      });
+
+      const fireblocksSigner: FireblocksSigner = {
+        fireblocks,
+        assetId: fireblocksAssetId,
+        vaultAccountId: fireblocksVaultAccountId
+      }
+      provider.setSigner(fireblocksSigner)
+
+      getTokenBalance(contractAddressFireblocks, new ethers.VoidSigner(wallet, provider), walletAddressFireblocks);
+
+      break;
     case "print-configs":
       console.log({ RPC_URL, NETWORK_NAME, CHAIN_ID });
       break;

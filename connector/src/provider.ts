@@ -1,10 +1,22 @@
 import { ethers } from 'ethers'
 import fetch from 'node-fetch'
+import {
+  Fireblocks,
+  TransactionOperation,
+  TransactionStateEnum,
+  TransferPeerPathType,
+} from "@fireblocks/ts-sdk"
+
+export interface FireblocksSigner {
+  fireblocks: Fireblocks
+  assetId: string
+  vaultAccountId: string
+}
 
 export class SilentDataRollupRPCProvider extends ethers.JsonRpcProvider implements ethers.Provider {
   private requestId = 0
   private readonly rpcUrl: string
-  private signer: ethers.Signer | null = null
+  private signer: ethers.Signer | FireblocksSigner | null = null
   private headers: Record<string, string> = {}
   public signMethods: string[] = []
 
@@ -19,7 +31,7 @@ export class SilentDataRollupRPCProvider extends ethers.JsonRpcProvider implemen
     }
   }
 
-  setSigner(signer: ethers.Signer) {
+  setSigner(signer: ethers.Signer | FireblocksSigner) {
     this.signer = signer
   }
 
@@ -45,10 +57,58 @@ export class SilentDataRollupRPCProvider extends ethers.JsonRpcProvider implemen
       const xTimestamp = (new Date()).toISOString()
       const serialRequest = JSON.stringify(payload)
       const xMessage = serialRequest + xTimestamp
-      const xSignature = await signer.signMessage(xMessage)
+
+      let xSignature = ''
+      if (signer && signer.signMessage === undefined) {
+        const content = ethers.hashMessage(xMessage).split('0x')[1]
+        const { data : { id } } = await (this.signer as FireblocksSigner).fireblocks.transactions.createTransaction({
+          transactionRequest: {
+            operation: TransactionOperation.Raw,
+            assetId: (this.signer as FireblocksSigner).assetId,
+            source: {
+              type: TransferPeerPathType.VaultAccount,
+              id: (this.signer as FireblocksSigner).vaultAccountId,
+            },
+            extraParameters: {
+              rawMessageData: {
+                messages: [{ content }],
+              },
+            },
+          }
+        });
+        
+        // poll until done
+        let txInfo = await (this.signer as FireblocksSigner).fireblocks.transactions.getTransaction({ txId: id! });
+        while (txInfo.data.status !== TransactionStateEnum.Completed) {
+          if (
+            txInfo.data.status === TransactionStateEnum.Cancelled ||
+            txInfo.data.status === TransactionStateEnum.Cancelling ||
+            txInfo.data.status === TransactionStateEnum.Failed ||
+            txInfo.data.status === TransactionStateEnum.Rejected ||
+            txInfo.data.status === TransactionStateEnum.Timeout
+          ) {
+            console.log(txInfo)
+            throw new Error(`Fireblocks failure. Tx id ${id} ${txInfo.data.status}`);
+          }
+          txInfo = await (this.signer as FireblocksSigner).fireblocks.transactions.getTransaction({ txId: id! });
+          await new Promise((res) => setTimeout(res, 500));
+        }
+
+        const signature = txInfo.data.signedMessages?.[0]?.signature;
+        if (!signature) {
+          throw new Error("No signature returned from Fireblocks");
+        }
+
+        const encodedSig = '0x'+ signature?.r! + signature?.s + Buffer.from([Number.parseInt(signature.v!.toString(),16)]).toString("hex");
+        xSignature = encodedSig || ''
+
+      } else {
+        xSignature = await signer.signMessage(xMessage)
+      }
+
       this.setHeaders({
         'x-timestamp': xTimestamp,
-        'x-signature': xSignature,
+        'x-signature': xSignature,    
       })
     } else {
       this.setHeaders({})

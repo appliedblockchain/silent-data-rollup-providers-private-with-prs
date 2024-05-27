@@ -1,6 +1,7 @@
 node_modules
 .yarn
 .env
+fireblocks_secret.key
 
 hardhat/hardhat-sdr/package-lock.json
 hardhat/hardhat-sdr/node_modules
