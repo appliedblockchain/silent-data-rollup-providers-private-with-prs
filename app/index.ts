@@ -36,6 +36,11 @@ const run = async () => {
         description: "get the wallet eth balance",
       },
       {
+        name: "Get Wallet Balance (ETH) using typed signing",
+        value: "get-eth-balance-typed-signing",
+        description: "get the wallet eth balance using typed signing",
+      },
+      {
         name: "Send ETH Transaction",
         value: "send-eth",
         description: "send ETH using wallet transaction",
@@ -62,133 +67,207 @@ const run = async () => {
 
   switch (answer) {
     case "token-balance-fireblocks":
+      const FIREBLOCKS_API_KEY = process.env.FIREBLOCKS_API_KEY;
+      const FIREBLOCKS_SECRET_KEY_PATH = process.env.FIREBLOCKS_SECRET_KEY_PATH;
+      const FIREBLOCKS_SECRET_KEY = readFileSync(
+        resolve(FIREBLOCKS_SECRET_KEY_PATH!),
+        "utf-8"
+      );
 
-    const FIREBLOCKS_API_KEY = process.env.FIREBLOCKS_API_KEY;
-    const FIREBLOCKS_SECRET_KEY_PATH = process.env.FIREBLOCKS_SECRET_KEY_PATH;
-    const FIREBLOCKS_SECRET_KEY = readFileSync(resolve(FIREBLOCKS_SECRET_KEY_PATH!), "utf-8");
-    
-    const fireblocks = new Fireblocks({
-      apiKey: FIREBLOCKS_API_KEY,
-      secretKey: FIREBLOCKS_SECRET_KEY,
-      basePath: BasePath.Sandbox,
-    });
+      const fireblocks = new Fireblocks({
+        apiKey: FIREBLOCKS_API_KEY,
+        secretKey: FIREBLOCKS_SECRET_KEY,
+        basePath: BasePath.Sandbox,
+      });
 
-      console.log("Insert the asset ID")
+      console.log("Insert the asset ID");
       const fireblocksAssetId = await input({
-        message: 'Asset ID:', 
-        default: 'ETH_TEST5'
+        message: "Asset ID:",
+        default: "ETH_TEST5",
       });
 
-      console.log("Insert the vault account ID")
+      console.log("Insert the vault account ID");
       const fireblocksVaultAccountId = await input({
-        message: 'Vault Account ID:', 
-        default: '0'
+        message: "Vault Account ID:",
+        default: "0",
       });
-      
-      let addresses = (await fireblocks.vaults.getVaultAccountAssetAddressesPaginated({
-        vaultAccountId: fireblocksVaultAccountId,
-        assetId: fireblocksAssetId
-      })).data.addresses
 
-      let wallet: string = ''
+      let addresses = (
+        await fireblocks.vaults.getVaultAccountAssetAddressesPaginated({
+          vaultAccountId: fireblocksVaultAccountId,
+          assetId: fireblocksAssetId,
+        })
+      ).data.addresses;
+
+      let wallet: string = "";
       if (addresses && addresses.length > 0) {
-        wallet = addresses[0].address as string
+        wallet = addresses[0].address as string;
       }
-      console.log('Address: ', JSON.stringify(wallet, null, 2));
+      console.log("Address: ", JSON.stringify(wallet, null, 2));
 
-      console.log("Insert the address of the deployed contract")
+      console.log("Insert the address of the deployed contract");
       const contractAddressFireblocks = await input({
-        message: 'Contract Address:',        
+        message: "Contract Address:",
       });
 
-      console.log("Insert the wallet address that you want to use check the token balance")
+      console.log(
+        "Insert the wallet address that you want to use check the token balance"
+      );
       const walletAddressFireblocks = await input({
-        message: 'Wallet Address:',
-        default: wallet
+        message: "Wallet Address:",
+        default: wallet,
       });
 
       const fireblocksSigner: FireblocksSigner = {
         fireblocks,
         assetId: fireblocksAssetId,
-        vaultAccountId: fireblocksVaultAccountId
-      }
-      provider.setSigner(fireblocksSigner)
+        vaultAccountId: fireblocksVaultAccountId,
+      };
+      provider.setSigner(fireblocksSigner);
 
-      getTokenBalance(contractAddressFireblocks, new ethers.VoidSigner(wallet, provider), walletAddressFireblocks);
+      getTokenBalance(
+        contractAddressFireblocks,
+        new ethers.VoidSigner(wallet, provider),
+        walletAddressFireblocks
+      );
 
       break;
     case "print-configs":
       console.log({ RPC_URL, NETWORK_NAME, CHAIN_ID });
       break;
     case "get-eth-balance":
-      console.log("Insert the private key of the wallet you want to use to sign your transaction")
+      console.log(
+        "Insert the private key of the wallet you want to use to sign your transaction"
+      );
       const privateKeyCheckBalance = await input({
-        message: 'Private Key: '
+        message: "Private Key: ",
       });
 
-      console.log("Insert the wallet address that you want to check the balance")
+      console.log(
+        "Insert the wallet address that you want to check the balance"
+      );
       const walletAddressBalance = await input({
-        message: 'Address: '
+        message: "Address: ",
       });
-      
-      const signerForCheckBalance = new ethers.Wallet(privateKeyCheckBalance, provider)  
-      provider.setSigner(signerForCheckBalance)
+
+      const signerForCheckBalance = new ethers.Wallet(
+        privateKeyCheckBalance,
+        provider
+      );
+      provider.setSigner(signerForCheckBalance);
 
       getETHBalance(provider, walletAddressBalance);
 
       break;
-    case "deploy":
-      console.log("Insert the private key of the wallet you want to use to sign your transaction")
-      const privateKeyForDeploy = await input({
-        message: 'Private Key: '
+    case "get-eth-balance-typed-signing":
+      console.log(
+        "Insert the private key of the wallet you want to use to sign your transaction"
+      );
+      const privateKeyCheckBalanceTypedSigning = await input({
+        message: "Private Key: ",
       });
-      
-      const signerForDeploy = new ethers.Wallet(privateKeyForDeploy, provider)  
-      provider.setSigner(signerForDeploy)
+
+      console.log(
+        "Insert the wallet address that you want to check the balance"
+      );
+      const walletAddressBalanceTypedSigning = await input({
+        message: "Address: ",
+      });
+
+      console.log(
+        "Insert the type of the typed signing you want to use:"
+      );
+      const typeTypedSigning = await select({
+        message: "Typed Message Signing: ",
+        choices: [
+          {
+            name: "EIP191",
+            value: "EIP191",
+          },
+          {
+            name: "EIP712",
+            value: "EIP712",
+          },
+        ],
+      });
+
+      const signerForCheckBalanceTypedSigning = new ethers.Wallet(
+        privateKeyCheckBalanceTypedSigning,
+        provider
+      );
+      provider.setSigner(signerForCheckBalanceTypedSigning);
+      provider.setTypeSign(typeTypedSigning as "EIP191" | "EIP712");
+
+      getETHBalance(provider, walletAddressBalanceTypedSigning);
+
+      break;
+    case "deploy":
+      console.log(
+        "Insert the private key of the wallet you want to use to sign your transaction"
+      );
+      const privateKeyForDeploy = await input({
+        message: "Private Key: ",
+      });
+
+      const signerForDeploy = new ethers.Wallet(privateKeyForDeploy, provider);
+      provider.setSigner(signerForDeploy);
 
       deploy(signerForDeploy);
 
       break;
     case "token-balance":
-      console.log("Insert the private key of the wallet you want to use to sign your transaction")
+      console.log(
+        "Insert the private key of the wallet you want to use to sign your transaction"
+      );
       const signerForTokenBalancePK = await input({
-        message: 'Private Key: '
+        message: "Private Key: ",
       });
 
-      console.log("Insert the address of the deployed contract")
+      console.log("Insert the address of the deployed contract");
       const contractAddress = await input({
-        message: 'Contract Address:',        
+        message: "Contract Address:",
       });
 
-      console.log("Insert the wallet address that you want to use check the token balance")
+      console.log(
+        "Insert the wallet address that you want to use check the token balance"
+      );
       const walletAddress = await input({
-        message: 'Wallet Address:',        
+        message: "Wallet Address:",
       });
-     
-      const signerForTokenBalance = new ethers.Wallet(signerForTokenBalancePK, provider)  
-      provider.setSigner(signerForTokenBalance)
+
+      const signerForTokenBalance = new ethers.Wallet(
+        signerForTokenBalancePK,
+        provider
+      );
+      provider.setSigner(signerForTokenBalance);
 
       getTokenBalance(contractAddress, signerForTokenBalance, walletAddress);
       break;
     case "send-eth":
-      console.log("Insert the private key of the wallet you want to use for signing your transaction")
+      console.log(
+        "Insert the private key of the wallet you want to use for signing your transaction"
+      );
       const signerPK = await input({
-        message: 'Private Key: '
+        message: "Private Key: ",
       });
 
       const toAddress = await input({
-        message: 'To Address:'        
+        message: "To Address:",
       });
 
       const value = await input({
-        message: 'Value in ETH:',
-        default: '0.001'     
+        message: "Value in ETH:",
+        default: "0.001",
       });
 
-      const signerForSendTransaction = new ethers.Wallet(signerPK, provider)  
-      provider.setSigner(signerForSendTransaction)
+      const signerForSendTransaction = new ethers.Wallet(signerPK, provider);
+      provider.setSigner(signerForSendTransaction);
 
-      sendTransaction(signerForSendTransaction, toAddress, ethers.parseUnits(value, 'ether'))
+      sendTransaction(
+        signerForSendTransaction,
+        toAddress,
+        ethers.parseUnits(value, "ether")
+      );
       break;
   }
 };
