@@ -708,7 +708,7 @@ anymatch@^3.0.3:
     normalize-path "^3.0.0"
     picomatch "^2.0.4"
 
-"app@file:/home/tiago/quickstart-audit/silent-data-rollup-quickstart/app":
+"app@file:/home/tiago/silent-data-rollup-quickstart/app":
   version "1.0.0"
   resolved "file:app"
   dependencies:
@@ -909,7 +909,7 @@ combined-stream@^1.0.8:
 concat-map@0.0.1:
   version "0.0.1"
 
-"connector@file:/home/tiago/quickstart-audit/silent-data-rollup-quickstart/connector":
+"connector@file:/home/tiago/silent-data-rollup-quickstart/connector":
   version "0.0.1"
   resolved "file:connector"
   dependencies:
@@ -918,7 +918,7 @@ concat-map@0.0.1:
     ethers "^6.10.0"
     node-fetch "2"
 
-"contracts@file:/home/tiago/quickstart-audit/silent-data-rollup-quickstart/contracts":
+"contracts@file:/home/tiago/silent-data-rollup-quickstart/contracts":
   resolved "file:contracts"
   dependencies:
     "@openzeppelin/contracts" "^5.0.1"
