@@ -75,5 +75,9 @@
   },
   "dependencies": {
     "js-sha3": "0.9.3"
+  },
+  "overrides": {
+    "ws": "8.17.1",
+    "squirrelly": "9.1.0"  
   }
 }
