@@ -15,10 +15,12 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@fireblocks/ts-sdk": "^2.0.0",
+    "@fireblocks/ts-sdk": "^2.1.0",
     "@inquirer/prompts": "^3.3.2",
-    "connector": "workspace:connector",
     "dotenv": "^16.4.1",
     "ethers": "^6.10.0"
+  },
+  "resolutions": {
+    "jsonwebtoken": "9.0.2"
   }
 }

@@ -8,6 +8,9 @@
     "connector",
     "contracts"
   ],
+  "resolutions": {
+    "jsonwebtoken": "9.0.2"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "yarn workspace connector build",
