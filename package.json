@@ -4,13 +4,13 @@
   "packageManager": "yarn@3.6.3",
   "version": "1.0.0",
   "workspaces": [
-    "app",
-    "connector",
-    "contracts"
+    "./app/",
+    "./connector/",
+    "./contracts/"
   ],
   "resolutions": {
     "jsonwebtoken": "9.0.2",
-    "ws": "8.17.1"    
+    "ws": "8.17.1"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
