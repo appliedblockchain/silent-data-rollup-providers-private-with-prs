@@ -53,7 +53,7 @@ const provider = new ethers.BrowserProvider(window.ethereum)
 const signer = await provider.getSigner()
 
 // connection
-const RPC_URL = 'https://custom-rpc-staging.silentdata.com/<your-auth-token>'
+const RPC_URL = 'https://testnet.silentdata.com/<your-auth-token>'
 const NETWORK_NAME = 'SDR'
 const CHAIN_ID = 51966
 // optional - customize the methods that should be signed

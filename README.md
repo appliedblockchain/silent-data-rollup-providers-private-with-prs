@@ -68,7 +68,7 @@ cast --version
 
 # Important: Environment Setup
 
-1) Login at [Silent Data Rollup](https://frontend-staging-rollup.silentdata.com/login) using your account.
+1) Login at [Silent Data [Rollup]](https://rollup.silentdata.com/login) using your account.
 2) On the top corner right menu, click and select 'Appchains' option.
 3) Click in the currently available 'Appchain' from the table.
 4) Go to the Security tab and generate a new token.
@@ -173,7 +173,7 @@ Error: {"code":3,"message":"execution reverted: PrivateToken: balance query for 
 ## Troubleshooting
 
 In case you receive an error with message **Token not found**:
-- Be sure that you are using a valid token and your subscription hasn't reached the requests limit yet which can be confirmed on your [plan page](https://frontend-staging-rollup.silentdata.com/organisation/plan)
+- Be sure that you are using a valid token and your subscription hasn't reached the requests limit yet which can be confirmed on your [plan page](https://rollup.silentdata.com/organisation/plan)
 
 ## Structure
 - `app` workspace 
@@ -218,7 +218,7 @@ import {
 ## Initialize the connector using SilentDataRollupRPCProvider constructor
 ```ts
 // connection
-const RPC_URL = 'https://custom-rpc-staging.silentdata.com/<your-auth-token>'
+const RPC_URL = 'https://testnet.silentdata.com/<your-auth-token>'
 const NETWORK_NAME = 'SDR'
 const CHAIN_ID = 51966
 
