@@ -69,7 +69,7 @@ cast --version
 # Important: Environment Setup
 
 1) Login at [Silent Data [Rollup]](https://rollup.silentdata.com/login) using your account.
-2) On the top corner right menu, click and select 'Appchains' option.
+2) On the dashboard, check the available appchain in the table (or click the option "view all" to go to see the complete list).
 3) Click in the currently available 'Appchain' from the table.
 4) Go to the Security tab and generate a new token.
 5) Copy the generated token 
