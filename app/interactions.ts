@@ -23,6 +23,7 @@ const sendTransaction = async (sender: ethers.Wallet, to: AddressLike, value: bi
   const tx = await sender.sendTransaction({
     to: to,
     value: value,
+    gasPrice: 0,
   });
   await waitTransactionReceipt(sender.provider, tx.hash, 10)
   console.log("Transaction confirmed: ", tx.hash)
