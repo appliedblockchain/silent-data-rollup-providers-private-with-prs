@@ -16,7 +16,7 @@ const deployContract = async (deployer: ethers.Signer, abi: ethers.InterfaceAbi,
     bytecode,
     deployer
   )
-  return await factory.deploy(...contractArgs)
+  return await factory.deploy(...contractArgs, { gasPrice: 0})
 }
 
 const getContract = async (contractAddress: string, abi: ethers.Interface | ethers.InterfaceAbi, signer?: ethers.Signer) : Promise<ethers.Contract> => {
