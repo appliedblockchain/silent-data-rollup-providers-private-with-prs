@@ -1,0 +1,41 @@
+{
+  "name": "@silentdatarollup/hardhat-plugin",
+  "version": "0.1.0",
+  "description": "Hardhat plugin for Silent Data Rollup",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepack": "npm run build"
+  },
+  "keywords": [
+    "ethereum",
+    "silentdata",
+    "rollup",
+    "hardhat"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@nomicfoundation/hardhat-ethers": "3.0.8",
+    "@silentdatarollup/core": "^0.1.0",
+    "debug": "4.3.7",
+    "ethers": "6.13.2"
+  },
+  "devDependencies": {
+    "@types/debug": "4.1.12",
+    "@types/node": "22.5.4",
+    "hardhat": "2.22.10",
+    "ts-node": "10.9.2",
+    "typescript": "5.6.2"
+  },
+  "peerDependencies": {
+    "ethers": "6.13.2",
+    "hardhat": "2.22.10"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,20 @@
+{
+    "files": [],
+    "references": [
+        { "path": "packages/core" },
+        { "path": "packages/ethers-provider" },
+        { "path": "packages/ethers-provider-fireblocks" },
+        { "path": "packages/hardhat-plugin" },
+        { "path": "packages/hardhat-plugin-fireblocks" }
+    ],
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "@silentdatarollup/core": ["packages/core/src"],
+            "@silentdatarollup/ethers-provider": ["packages/ethers-provider/src"],
+            "@silentdatarollup/ethers-provider-fireblocks": ["packages/ethers-provider-fireblocks/src"],
+            "@silentdatarollup/hardhat-plugin": ["packages/hardhat-plugin/src"],
+            "@silentdatarollup/hardhat-plugin-fireblocks": ["packages/hardhat-plugin-fireblocks/src"]
+        },
+    }
+}

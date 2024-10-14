@@ -1,0 +1,35 @@
+{
+  "name": "@silentdatarollup/ethers-provider",
+  "version": "0.1.0",
+  "description": "Ethers.js provider for Silent Data Rollup",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepack": "npm run build",
+    "test": "jest"
+  },
+  "keywords": [
+    "ethereum",
+    "provider",
+    "silentdata",
+    "rollup",
+    "ethers"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@silentdatarollup/core": "^0.1.0",
+    "ethers": "^6.13.2"
+  },
+  "devDependencies": {
+    "@types/node": "22.5.4",
+    "ts-node": "10.9.2",
+    "typescript": "5.6.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
