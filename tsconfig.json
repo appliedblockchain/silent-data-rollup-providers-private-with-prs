@@ -10,11 +10,11 @@
     "compilerOptions": {
         "baseUrl": ".",
         "paths": {
-            "@silentdatarollup/core": ["packages/core/src"],
-            "@silentdatarollup/ethers-provider": ["packages/ethers-provider/src"],
-            "@silentdatarollup/ethers-provider-fireblocks": ["packages/ethers-provider-fireblocks/src"],
-            "@silentdatarollup/hardhat-plugin": ["packages/hardhat-plugin/src"],
-            "@silentdatarollup/hardhat-plugin-fireblocks": ["packages/hardhat-plugin-fireblocks/src"]
+            "@appliedblockchain/silentdatarollup-core": ["packages/core/src"],
+            "@appliedblockchain/silentdatarollup-ethers-provider": ["packages/ethers-provider/src"],
+            "@appliedblockchain/silentdatarollup-ethers-provider-fireblocks": ["packages/ethers-provider-fireblocks/src"],
+            "@appliedblockchain/silentdatarollup-hardhat-plugin": ["packages/hardhat-plugin/src"],
+            "@appliedblockchain/silentdatarollup-hardhat-plugin-fireblocks": ["packages/hardhat-plugin-fireblocks/src"]
         },
     }
 }

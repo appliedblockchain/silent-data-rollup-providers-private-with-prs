@@ -30,7 +30,7 @@ Custom providers for SilentData Rollup, compatible with ethers.js.
 #### Installing Hardhat Integration Dependencies
 
 ```bash
-npm install @silentdatarollup/core @silentdatarollup/hardhat-plugin-fireblocks @nomicfoundation/hardhat-ethers@3
+npm install @appliedblockchain/silentdatarollup-core @appliedblockchain/silentdatarollup-hardhat-plugin-fireblocks @nomicfoundation/hardhat-ethers@3
 ```
 
 #### Hardhat Integration Example
@@ -44,8 +44,8 @@ import {
   ChainId,
 } from "@fireblocks/fireblocks-web3-provider";
 import "@nomicfoundation/hardhat-ignition-ethers";
-import "@silentdatarollup/hardhat-plugin-fireblocks";
-import { SilentDataSignatureTypeRollupProvider } from "@silentdatarollup/core";
+import "@appliedblockchain/silentdatarollup-hardhat-plugin-fireblocks";
+import { SilentDataSignatureTypeRollupProvider } from "@appliedblockchain/silentdatarollup-core";
 
 const RPC_URL = "SILENT_DATA_ROLLUP_RPC_URL";
 
