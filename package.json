@@ -1,10 +1,12 @@
 {
-  "private": true,
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "repository": "https://github.com/appliedblockchain/silent-data-rollup-quickstart",
   "workspaces": [
     "./packages/*"
   ],
-  "name": "@silentdatarollup/root",
+  "name": "@appliedblockchain/silentdatarollup-root",
   "version": "0.1.0",
   "description": "Custom providers for Silent Data Rollup compatible with ethers.js and Hardhat plugins",
   "keywords": [
