@@ -1,4 +1,6 @@
 {
+  "private": true,
+  "repository": "https://github.com/appliedblockchain/silent-data-rollup-quickstart",
   "name": "@silentdatarollup/core",
   "version": "0.1.0",
   "description": "Core library for Silent Data Rollup",

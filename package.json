@@ -1,5 +1,6 @@
 {
   "private": true,
+  "repository": "https://github.com/appliedblockchain/silent-data-rollup-quickstart",
   "workspaces": [
     "./packages/*"
   ],
