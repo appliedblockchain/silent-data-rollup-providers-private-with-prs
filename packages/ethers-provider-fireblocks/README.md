@@ -30,7 +30,7 @@ Custom providers for SilentData Rollup, compatible with ethers.js for Fireblocks
 #### Installing Fireblocks Integration Dependencies
 
 ```bash
-npm install @silentdatarollup/core @silentdatarollup/ethers-provider-fireblocks ethers@6 @fireblocks/fireblocks-web3-provider
+npm install @appliedblockchain/silentdatarollup-core @appliedblockchain/silentdatarollup-ethers-provider-fireblocks ethers@6 @fireblocks/fireblocks-web3-provider
 ```
 
 #### Fireblocks Integration Example
@@ -41,8 +41,8 @@ import {
   ChainId,
   FireblocksWeb3Provider,
 } from "@fireblocks/fireblocks-web3-provider";
-import { BaseConfig, SilentDataRollupContract } from "@silentdatarollup/core";
-import { SilentDataRollupFireblocksProvider } from "@silentdatarollup/ethers-provider-fireblocks";
+import { BaseConfig, SilentDataRollupContract } from "@appliedblockchain/silentdatarollup-core";
+import { SilentDataRollupFireblocksProvider } from "@appliedblockchain/silentdatarollup-ethers-provider-fireblocks";
 
 const RPC_URL = "SILENT_DATA_ROLLUP_RPC_URL";
 

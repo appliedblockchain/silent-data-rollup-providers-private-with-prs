@@ -30,7 +30,7 @@ Custom providers for integrating SilentData Rollup with Hardhat.
 #### Installing Hardhat Integration Dependencies
 
 ```bash
-npm install @silentdatarollup/hardhat-plugin @nomicfoundation/hardhat-ethers@3
+npm install @appliedblockchain/silentdatarollup-hardhat-plugin @nomicfoundation/hardhat-ethers@3
 ```
 
 #### Hardhat Integration Example
@@ -39,7 +39,7 @@ To integrate the SilentData Rollup Provider with Hardhat, you need to configure 
 
 ```typescript
 import "@nomicfoundation/hardhat-ethers";
-import "@silentdatarollup/hardhat-plugin";
+import "@appliedblockchain/silentdatarollup-hardhat-plugin";
 
 const RPC_URL = "SILENT_DATA_ROLLUP_RPC_URL";
 const PRIVATE_KEY = process.env.PRIVATE_KEY;

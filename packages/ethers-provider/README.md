@@ -33,14 +33,14 @@ Custom providers for SilentData Rollup, compatible with ethers.js.
 #### Installing Basic Usage Dependencies
 
 ```bash
-npm install @silentdatarollup/core @silentdatarollup/ethers-provider ethers@6
+npm install @appliedblockchain/silentdatarollup-core @appliedblockchain/silentdatarollup-ethers-provider ethers@6
 ```
 
 #### Basic Usage Example
 
 ```typescript
-import { NetworkName } from "@silentdatarollup/core";
-import { NetworkName, SilentDataRollupProvider } from "@silentdatarollup/ethers-provider";
+import { NetworkName } from "@appliedblockchain/silentdatarollup-core";
+import { NetworkName, SilentDataRollupProvider } from "@appliedblockchain/silentdatarollup-ethers-provider";
 import { Wallet } from "ethers";
 
 const providerConfig = {
@@ -60,14 +60,14 @@ console.log(balance);
 #### Installing Usage with a Contract Dependencies
 
 ```bash
-npm install @silentdatarollup/core @silentdatarollup/ethers-provider ethers@6
+npm install @appliedblockchain/silentdatarollup-core @appliedblockchain/silentdatarollup-ethers-provider ethers@6
 ```
 
 #### Usage with a Contract Example
 
 ```typescript
-import { ChainId, SilentDataRollupContract } from "@silentdatarollup/core";
-import { SilentDataRollupProvider } from "@silentdatarollup/ethers-provider";
+import { ChainId, SilentDataRollupContract } from "@appliedblockchain/silentdatarollup-core";
+import { SilentDataRollupProvider } from "@appliedblockchain/silentdatarollup-ethers-provider";
 import { ethers } from 'ethers';
 
 const providerConfig = {

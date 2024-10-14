@@ -1,4 +1,4 @@
-import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers'
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import {
   DEBUG_NAMESPACE,
   getAuthHeaders,
@@ -6,56 +6,56 @@ import {
   HEADER_SIGNATURE,
   HEADER_TIMESTAMP,
   SignatureType,
-} from '@silentdatarollup/core'
-import debug from 'debug'
-import { ProviderWrapper } from 'hardhat/plugins'
-import { RequestArguments } from 'hardhat/types'
-import { SIGN_RPC_METHODS } from './constants'
-import { SilentdataNetworkConfig } from './types'
+} from "@appliedblockchain/silentdatarollup-core";
+import debug from "debug";
+import { ProviderWrapper } from "hardhat/plugins";
+import { RequestArguments } from "hardhat/types";
+import { SIGN_RPC_METHODS } from "./constants";
+import { SilentdataNetworkConfig } from "./types";
 
-const log = debug(DEBUG_NAMESPACE)
+const log = debug(DEBUG_NAMESPACE);
 
 export class HardhatSilentDataRollupProvider extends ProviderWrapper {
-  public signer: HardhatEthersSigner
-  private config: SilentdataNetworkConfig
+  public signer: HardhatEthersSigner;
+  private config: SilentdataNetworkConfig;
 
   constructor(
     signer: any,
     protected readonly _wrappedProvider: any,
-    config: SilentdataNetworkConfig,
+    config: SilentdataNetworkConfig
   ) {
-    super(_wrappedProvider)
-    this.signer = signer
+    super(_wrappedProvider);
+    this.signer = signer;
     this.config = {
       ...config,
       authSignatureType: config?.authSignatureType ?? SignatureType.Raw,
-    }
-    log('HardhatSilentDataRollupProvider initialized')
+    };
+    log("HardhatSilentDataRollupProvider initialized");
   }
 
   public async request(args: RequestArguments) {
-    log('Request: %s', args)
+    log("Request: %s", args);
 
-    const requiresAuthHeaders = SIGN_RPC_METHODS.includes(args.method)
+    const requiresAuthHeaders = SIGN_RPC_METHODS.includes(args.method);
 
     if (requiresAuthHeaders) {
-      log('Requesting auth headers for method: %s', args.method)
+      log("Requesting auth headers for method: %s", args.method);
       // Clone the wrapped provider
-      const clonedProvider = this.cloneWrappedProvider()
+      const clonedProvider = this.cloneWrappedProvider();
 
       const rpcRequest = clonedProvider._getJsonRpcRequest(
         args.method,
-        args.params,
-      )
+        args.params
+      );
 
-      clonedProvider._extraHeaders = await this.getAuthHeaders(rpcRequest)
+      clonedProvider._extraHeaders = await this.getAuthHeaders(rpcRequest);
 
       // Use the cloned provider for this request
-      return clonedProvider.request(args)
+      return clonedProvider.request(args);
     }
 
-    log('Forwarding request to wrapped provider')
-    return this._wrappedProvider.request(args)
+    log("Forwarding request to wrapped provider");
+    return this._wrappedProvider.request(args);
   }
 
   /**
@@ -74,38 +74,38 @@ export class HardhatSilentDataRollupProvider extends ProviderWrapper {
   public cloneWrappedProvider() {
     const clonedProvider = Object.create(
       Object.getPrototypeOf(this._wrappedProvider),
-      Object.getOwnPropertyDescriptors(this._wrappedProvider),
-    )
+      Object.getOwnPropertyDescriptors(this._wrappedProvider)
+    );
 
-    const payloadId = Math.floor(Math.random() * 10000000000)
+    const payloadId = Math.floor(Math.random() * 10000000000);
 
     clonedProvider._getJsonRpcRequest = (
       method: string,
-      params: any[] = [],
+      params: any[] = []
     ) => {
       return {
-        jsonrpc: '2.0',
+        jsonrpc: "2.0",
         method,
         params,
         id: payloadId,
-      }
-    }
+      };
+    };
 
-    return clonedProvider
+    return clonedProvider;
   }
 
   private async getAuthHeaders(request: any): Promise<{
-    [HEADER_TIMESTAMP]: string
-    [HEADER_SIGNATURE]?: string
-    [HEADER_EIP712_SIGNATURE]?: string
+    [HEADER_TIMESTAMP]: string;
+    [HEADER_SIGNATURE]?: string;
+    [HEADER_EIP712_SIGNATURE]?: string;
   }> {
-    log('Getting auth headers for request', JSON.stringify(request, null, 2))
+    log("Getting auth headers for request", JSON.stringify(request, null, 2));
     const headers = await getAuthHeaders(
       this.signer,
       request,
-      this.config.authSignatureType!,
-    )
-    log('Auth headers generated successfully', headers)
-    return headers
+      this.config.authSignatureType!
+    );
+    log("Auth headers generated successfully", headers);
+    return headers;
   }
 }
