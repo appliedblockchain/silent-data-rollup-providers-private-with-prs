@@ -21,6 +21,7 @@ import {
 import {
   AuthHeaders,
   AuthSignatureMessage,
+  AuthSignatureMessageRequest,
   BaseConfig,
   DelegateConfig,
   DelegateHeaders,
@@ -176,16 +177,15 @@ export class SilentDataRollupBase {
   }
 
   public async getDelegateHeaders(provider: any): Promise<DelegateHeaders> {
+    log('Getting delegate headers')
     const now = Math.floor(Date.now() / 1000)
     const BUFFER_TIME = 5
     const signatureType = this.config.authSignatureType
-
-    if (
-      this.cachedDelegateHeaders &&
-      this.cachedHeadersExpiry > now + BUFFER_TIME
-    ) {
+    const isCachedHeadersValid =
+      this.cachedDelegateHeaders && this.cachedHeadersExpiry > now + BUFFER_TIME
+    if (isCachedHeadersValid) {
       log('Returning cached delegate headers')
-      return this.cachedDelegateHeaders
+      return this.cachedDelegateHeaders as DelegateHeaders
     }
 
     try {
@@ -237,6 +237,7 @@ export class SilentDataRollupBase {
     provider: any,
     payload: JsonRpcPayload | JsonRpcPayload[]
   ): Promise<AuthHeaders> {
+    log('Getting auth headers', JSON.stringify(payload, null, 2))
     const xTimestamp = new Date().toISOString()
     const headers: AuthHeaders = {
       [HEADER_TIMESTAMP]: xTimestamp,
@@ -265,6 +266,7 @@ export class SilentDataRollupBase {
         throw new Error(`Unsupported signature type: ${signatureType}`)
     }
 
+    log('Auth headers:', JSON.stringify(headers, null, 2))
     return headers
   }
 
@@ -273,14 +275,11 @@ export class SilentDataRollupBase {
     payload: JsonRpcPayload | JsonRpcPayload[],
     timestamp: string
   ): Promise<string> {
-    log('Preparing raw message for signing')
-    const serialRequest = JSON.stringify(payload)
-    const xMessage = serialRequest + timestamp
-    log('Raw message:', xMessage)
+    const xMessage = this.prepareSignatureMessage(payload, timestamp)
     const delegateSigner = await this.getDelegateSigner(this)
     const signer = delegateSigner ?? provider.signer
     const signature = await this.signMessage(signer, xMessage)
-    log('Raw signature generated:', signature)
+    log('Message signed. Signature:', signature)
     return signature
   }
 
@@ -289,27 +288,15 @@ export class SilentDataRollupBase {
     payload: JsonRpcPayload | JsonRpcPayload[],
     timestamp: string
   ): Promise<string> {
-    log('Preparing payload for signTypedData')
-    const preparePayload = (p: JsonRpcPayload) => ({
-      ...p,
-      params: JSON.stringify(p.params),
-    })
-
-    const preparedPayload = Array.isArray(payload)
-      ? payload.map(preparePayload)
-      : preparePayload(payload)
-
-    const message = {
-      request: preparedPayload,
-      timestamp,
-    }
-
+    const message = this.prepareSignatureTypedData(payload, timestamp)
     const types = getAuthEIP721Types(payload)
-
     const delegateSigner = await this.getDelegateSigner(this)
     const signer = delegateSigner ?? provider.signer
 
-    log('Signing typed data')
+    log(
+      'Signing typed data',
+      JSON.stringify({ message, types, eip721Domain }, null, 2)
+    )
     const signature = await this.signTypedData(
       signer,
       eip721Domain,
@@ -317,7 +304,7 @@ export class SilentDataRollupBase {
       message
     )
 
-    log('Signature generated:', signature)
+    log('Message signed. Signature:', signature)
     return signature
   }
 
@@ -363,8 +350,13 @@ export class SilentDataRollupBase {
     payload: JsonRpcPayload | JsonRpcPayload[],
     timestamp: string
   ): string {
+    log('Preparing raw message for signing', {
+      payload: JSON.stringify(payload, null, 2),
+      timestamp,
+    })
     const serialRequest = JSON.stringify(payload)
     const xMessage = serialRequest + timestamp
+    log('Raw message to be signed:', xMessage)
     return xMessage
   }
 
@@ -386,6 +378,7 @@ export class SilentDataRollupBase {
       timestamp,
     }
 
+    log('Prepared payload for signTypedData', JSON.stringify(message, null, 2))
     return message
   }
 }

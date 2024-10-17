@@ -1,14 +1,15 @@
-import { FireblocksWeb3Provider } from "@fireblocks/fireblocks-web3-provider";
+import { FireblocksWeb3Provider } from '@fireblocks/fireblocks-web3-provider'
 import {
   BaseConfig,
+  DEBUG_NAMESPACE,
   HEADER_DELEGATE,
   HEADER_DELEGATE_SIGNATURE,
   HEADER_EIP712_DELEGATE_SIGNATURE,
   isSignableContractCall,
   SIGN_RPC_METHODS,
   SignatureType,
-} from "@appliedblockchain/silentdatarollup-core";
-import debug from "debug";
+} from '@appliedblockchain/silentdatarollup-core'
+import debug from 'debug'
 import {
   BrowserProvider,
   BrowserProviderOptions,
@@ -17,20 +18,19 @@ import {
   keccak256,
   Networkish,
   Transaction,
-} from "ethers";
-import { TransactionOperation } from "fireblocks-sdk";
-import { SilentDataRollupFireblocksBase } from "./Base";
-import { DEBUG_NAMESPACE_SILENTDATA_INTERCEPTOR } from "./constants";
+} from 'ethers'
+import { TransactionOperation } from 'fireblocks-sdk'
+import { SilentDataRollupFireblocksBase } from './Base'
 
-const log = debug(DEBUG_NAMESPACE_SILENTDATA_INTERCEPTOR);
+const log = debug(DEBUG_NAMESPACE)
 
 export class SilentDataRollupFireblocksProvider extends BrowserProvider {
-  private lastNonce: { [address: string]: number } = {};
-  private ethereum: FireblocksWeb3Provider;
-  private network: Networkish | undefined;
-  private _options: BrowserProviderOptions | undefined;
-  private config: BaseConfig;
-  private baseProvider: SilentDataRollupFireblocksBase;
+  private lastNonce: { [address: string]: number } = {}
+  private ethereum: FireblocksWeb3Provider
+  private network: Networkish | undefined
+  private _options: BrowserProviderOptions | undefined
+  private config: BaseConfig
+  private baseProvider: SilentDataRollupFireblocksBase
 
   constructor({
     ethereum,
@@ -38,22 +38,22 @@ export class SilentDataRollupFireblocksProvider extends BrowserProvider {
     options,
     config = {},
   }: {
-    ethereum: Eip1193Provider;
-    network?: Networkish;
-    options?: BrowserProviderOptions;
-    config?: BaseConfig;
+    ethereum: Eip1193Provider
+    network?: Networkish
+    options?: BrowserProviderOptions
+    config?: BaseConfig
   }) {
-    super(ethereum, network, options);
-    log("Initializing SilentDataRollupFireblocksProvider");
-    this.setupInterceptor(ethereum, network, options);
-    this.ethereum = ethereum as FireblocksWeb3Provider;
-    this.network = network;
-    this._options = options;
+    super(ethereum, network, options)
+    log('Initializing SilentDataRollupFireblocksProvider')
+    this.setupInterceptor(ethereum, network, options)
+    this.ethereum = ethereum as FireblocksWeb3Provider
+    this.network = network
+    this._options = options
     this.config = {
       ...config,
       authSignatureType: config?.authSignatureType ?? SignatureType.Raw,
-    };
-    this.baseProvider = new SilentDataRollupFireblocksBase(config);
+    }
+    this.baseProvider = new SilentDataRollupFireblocksBase(config)
   }
 
   /**
@@ -76,11 +76,11 @@ export class SilentDataRollupFireblocksProvider extends BrowserProvider {
    * @returns A Promise that resolves to the next available nonce as a number.
    */
   private async getNextNonce(address: string): Promise<number> {
-    const currentNonce = await this.getTransactionCount(address);
-    this.lastNonce[address] = this.lastNonce[address] || currentNonce;
-    const nonce = Math.max(this.lastNonce[address], currentNonce);
-    this.lastNonce[address] = nonce + 1;
-    return nonce;
+    const currentNonce = await this.getTransactionCount(address)
+    this.lastNonce[address] = this.lastNonce[address] || currentNonce
+    const nonce = Math.max(this.lastNonce[address], currentNonce)
+    this.lastNonce[address] = nonce + 1
+    return nonce
   }
 
   /**
@@ -104,17 +104,17 @@ export class SilentDataRollupFireblocksProvider extends BrowserProvider {
    * @param payload - The transaction payload to be sent
    * @returns The transaction hash
    */
-  private async sendTransaction(payload: any) {
-    log("Starting signAndBroadcastTransaction");
-    if (payload.method !== "eth_sendTransaction") {
-      log("Not an eth_sendTransaction method, skipping");
-      throw new Error("Not an eth_sendTransaction method.");
+  public async sendTransaction(payload: any) {
+    log('Starting signAndBroadcastTransaction')
+    if (payload.method !== 'eth_sendTransaction') {
+      log('Not an eth_sendTransaction method, skipping')
+      throw new Error('Not an eth_sendTransaction method.')
     }
 
-    const nonce = await this.getNextNonce(payload.params[0].from);
-    const chainId = (await this.getNetwork()).chainId;
-    const { maxFeePerGas, maxPriorityFeePerGas } = await this.getFeeData();
-    const gasLimit = await this.estimateGas(payload.params[0]);
+    const nonce = await this.getNextNonce(payload.params[0].from)
+    const chainId = (await this.getNetwork()).chainId
+    const { maxFeePerGas, maxPriorityFeePerGas } = await this.getFeeData()
+    const gasLimit = await this.estimateGas(payload.params[0])
 
     const txParams = {
       type: 2,
@@ -126,38 +126,38 @@ export class SilentDataRollupFireblocksProvider extends BrowserProvider {
       gasLimit,
       data: payload.params[0].data,
       value: payload.params[0].value,
-    };
-    log("Transaction params:", txParams);
+    }
+    log('Transaction params:', txParams)
 
-    const tx = Transaction.from(txParams);
+    const tx = Transaction.from(txParams)
 
-    const txHash = keccak256(tx.unsignedSerialized);
-    const txHashHex = hexlify(txHash).slice(2);
-    log("Transaction hash to sign:", txHashHex);
+    const txHash = keccak256(tx.unsignedSerialized)
+    const txHashHex = hexlify(txHash).slice(2)
+    log('Transaction hash to sign:', txHashHex)
 
-    log("Creating signature");
+    log('Creating signature')
     const signature = await this.baseProvider.createPersonalSignature(
       this,
       txHashHex,
       TransactionOperation.RAW
-    );
-    log("Signature created:", signature);
+    )
+    log('Signature created:', signature)
 
-    tx.signature = signature;
-    log("Signature added to transaction");
+    tx.signature = signature
+    log('Signature added to transaction')
 
-    log("Broadcasting transaction");
-    const signedTx = tx.serialized;
+    log('Broadcasting transaction')
+    const signedTx = tx.serialized
     try {
-      await this.broadcastTransaction(signedTx);
-      log("Transaction broadcasted");
+      await this.broadcastTransaction(signedTx)
+      log('Transaction broadcasted')
     } catch (error) {
-      log("Transaction broadcast failed");
-      throw error;
+      log('Transaction broadcast failed')
+      throw error
     }
 
-    log("Transaction hash:", tx.hash);
-    return tx.hash;
+    log('Transaction hash:', tx.hash)
+    return tx.hash
   }
 
   private setupInterceptor(
@@ -165,18 +165,16 @@ export class SilentDataRollupFireblocksProvider extends BrowserProvider {
     network?: Networkish,
     _options?: BrowserProviderOptions
   ): void {
-    const originalSend = (ethereum as any).send;
-    const that = this;
+    const originalSend = (ethereum as any).send
+    const that = this
 
-    (ethereum as any).send = async (
+    ;(ethereum as any).send = async (
       payload: any,
       callback: (error: any, response: any) => void
     ) => {
-      (async () => {
-        log(`Intercepted request: ${payload.method}`);
-
-        if (payload.method === "eth_sendTransaction") {
-          return that.sendTransaction(payload);
+      ;(async () => {
+        if (payload.method === 'eth_sendTransaction') {
+          return that.sendTransaction(payload)
         }
 
         const requiresAuthHeaders =
@@ -185,81 +183,73 @@ export class SilentDataRollupFireblocksProvider extends BrowserProvider {
             payload,
             this.baseProvider.contractMethodsToSign,
             this.baseProvider.contract
-          );
+          )
 
-        const delegateHeaders = [];
+        const delegateHeaders = []
         if (requiresAuthHeaders) {
-          let delegateSigner;
+          log(`Intercepted request: ${JSON.stringify(payload, null, 2)}`)
+          let delegateSigner
           if (this.config.delegate) {
-            delegateSigner = await this.baseProvider.getDelegateSigner(this);
+            delegateSigner = await this.baseProvider.getDelegateSigner(this)
             const {
               [HEADER_DELEGATE]: xDelegate,
               [HEADER_DELEGATE_SIGNATURE]: xDelegateSignature,
               [HEADER_EIP712_DELEGATE_SIGNATURE]: xEip712DelegateSignature,
-            } = await this.baseProvider.getDelegateHeaders(this);
+            } = await this.baseProvider.getDelegateHeaders(this)
 
-            delegateHeaders.push({ name: HEADER_DELEGATE, value: xDelegate });
+            delegateHeaders.push({ name: HEADER_DELEGATE, value: xDelegate })
             if (xDelegateSignature) {
               delegateHeaders.push({
                 name: HEADER_DELEGATE_SIGNATURE,
                 value: xDelegateSignature,
-              });
+              })
             }
             if (xEip712DelegateSignature) {
               delegateHeaders.push({
                 name: HEADER_EIP712_DELEGATE_SIGNATURE,
                 value: xEip712DelegateSignature,
-              });
+              })
             }
           }
 
-          log(
-            `'${
-              payload.method
-            }' method call intercepted with params ${JSON.stringify(
-              payload.params
-            )}`
-          );
           const clonedEthereum = new FireblocksWeb3Provider(
             (ethereum as any).config
-          );
-          log("Adding auth headers to the request");
+          )
           const authHeaders = await this.baseProvider.getAuthHeaders(
             this,
             payload
-          );
-          const allHeaders = [...delegateHeaders];
+          )
+          const allHeaders = [...delegateHeaders]
 
           for (const [key, value] of Object.entries(authHeaders)) {
-            allHeaders.push({ name: key, value: value });
+            allHeaders.push({ name: key, value: value })
           }
 
-          (clonedEthereum as any).headers = allHeaders;
-          log("Sending request to the Fireblocks provider with auth headers");
-          log("Request sent with auth headers");
-          return originalSend.call(clonedEthereum, payload, callback);
+          ;(clonedEthereum as any).headers = allHeaders
+          log('Sending request with auth headers')
+          return originalSend.call(clonedEthereum, payload, callback)
         }
 
-        const result = await originalSend.call(ethereum, payload, callback);
-        return result;
-      })();
-    };
+        const result = await originalSend.call(ethereum, payload, callback)
+        return result
+      })()
+    }
   }
 
   clone(): SilentDataRollupFireblocksProvider {
-    log("Cloning SilentDataRollupFireblocksProvider");
+    log('Cloning SilentDataRollupFireblocksProvider')
     const newFireblocksProvider = new FireblocksWeb3Provider(
       (this as any).ethereum.config
-    );
+    )
 
     const clonedProvider = new SilentDataRollupFireblocksProvider({
       ethereum: newFireblocksProvider,
       network: this.network,
       options: this._options,
       config: this.config,
-    });
+    })
 
-    log("SilentDataRollupFireblocksProvider cloned successfully");
-    return clonedProvider;
+    log('SilentDataRollupFireblocksProvider cloned successfully')
+    return clonedProvider
   }
 }

@@ -23,8 +23,8 @@ extendEnvironment((hre) => {
 
   const wrappedProvider = new SilentDataFireblocksSigner(
     hre.network.provider,
-    networkConfig.silentdata,
+    networkConfig.silentdata
   )
-  log('Wrapped provider created')
+  log('Provider extended')
   hre.network.provider = wrappedProvider
 })
