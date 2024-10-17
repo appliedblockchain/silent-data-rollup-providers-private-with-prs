@@ -9,6 +9,7 @@ import {
 import {
   DEBUG_NAMESPACE,
   DEFAULT_DELEGATE_EXPIRES,
+  DELEGATE_EXPIRATION_THRESHOLD_BUFFER,
   delegateEIP721Types,
   eip721Domain,
   HEADER_DELEGATE,
@@ -83,7 +84,10 @@ export class SilentDataRollupBase {
     const now = Math.floor(Date.now() / 1000)
     log('getDelegateSigner: Current time:', now)
 
-    if (this.currentDelegateSigner && this.delegateSignerExpires - 5 > now) {
+    const isDelegateSignerValid =
+      this.currentDelegateSigner &&
+      this.delegateSignerExpires - DELEGATE_EXPIRATION_THRESHOLD_BUFFER > now
+    if (isDelegateSignerValid) {
       log(
         'getDelegateSigner: Returning existing delegate signer, expires in:',
         this.delegateSignerExpires - now,
@@ -179,10 +183,10 @@ export class SilentDataRollupBase {
   public async getDelegateHeaders(provider: any): Promise<DelegateHeaders> {
     log('Getting delegate headers')
     const now = Math.floor(Date.now() / 1000)
-    const BUFFER_TIME = 5
     const signatureType = this.config.authSignatureType
     const isCachedHeadersValid =
-      this.cachedDelegateHeaders && this.cachedHeadersExpiry > now + BUFFER_TIME
+      this.cachedDelegateHeaders &&
+      this.cachedHeadersExpiry - DELEGATE_EXPIRATION_THRESHOLD_BUFFER > now
     if (isCachedHeadersValid) {
       log('Returning cached delegate headers')
       return this.cachedDelegateHeaders as DelegateHeaders
