@@ -4,7 +4,7 @@
   },
   "repository": "https://github.com/appliedblockchain/silent-data-rollup-quickstart",
   "name": "@appliedblockchain/silentdatarollup-ethers-provider",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Ethers.js provider for Silent Data Rollup",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

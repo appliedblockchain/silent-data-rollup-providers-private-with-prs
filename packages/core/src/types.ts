@@ -39,10 +39,11 @@ export type DelegateConfig = {
 
 export type BaseConfig = {
   /**
-   * Configuration for delegate functionality.
-   * - If true, uses default delegate configuration.
-   * - If an object, allows customization of delegate behavior.
-   * - If undefined or false, delegate functionality is disabled.
+   * Enables auth header signing by a delegate signer.
+   * Configuration for optional delegate functionality.
+   * - true: Uses default delegate configuration.
+   * - object: Allows customization of delegate behavior.
+   * - undefined/false: Disables delegate functionality.
    */
   delegate?:
     | boolean
