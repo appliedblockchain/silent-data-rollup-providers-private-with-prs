@@ -6,16 +6,16 @@ import { HardhatUserConfig } from "hardhat/config";
 
 import "@appliedblockchain/silentdatarollup-hardhat-plugin";
 
-if (!process.env.RPC_URL) {
-  throw new Error("RPC_URL environment variable is required");
-}
+const REQUIRED_ENV_VARS = ["RPC_URL", "PRIVATE_KEY"] as const;
 
-if (!process.env.PRIVATE_KEY) {
-  throw new Error("PRIVATE_KEY environment variable is required");
-}
+REQUIRED_ENV_VARS.forEach((envVar) => {
+  if (!process.env[envVar]) {
+    throw new Error(`${envVar} environment variable is required`);
+  }
+});
 
-const RPC_URL = process.env.RPC_URL;
-const PRIVATE_KEY = process.env.PRIVATE_KEY;
+const RPC_URL = process.env.RPC_URL as string;
+const PRIVATE_KEY = process.env.PRIVATE_KEY as string;
 
 const config: HardhatUserConfig = {
   solidity: "0.8.22",
