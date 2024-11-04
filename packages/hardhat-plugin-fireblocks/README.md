@@ -30,7 +30,7 @@ Custom providers for SilentData Rollup, compatible with ethers.js.
 #### Installing Hardhat Integration Dependencies
 
 ```bash
-npm install @appliedblockchain/silentdatarollup-core @appliedblockchain/silentdatarollup-hardhat-plugin-fireblocks @nomicfoundation/hardhat-ethers@3
+npm install @appliedblockchain/silentdatarollup-core @appliedblockchain/silentdatarollup-hardhat-plugin-fireblocks @nomicfoundation/hardhat-ignition-ethers@0.15.7
 ```
 
 #### Hardhat Integration Example
