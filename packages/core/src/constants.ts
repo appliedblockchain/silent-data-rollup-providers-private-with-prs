@@ -12,14 +12,6 @@ export const eip721Domain = {
   version: '1',
 }
 
-// export const eip721Domain = {
-//   name: 'Silent Data [Rollup]',
-//   version: '1',
-//   chainId: '1001',
-//   verifyingContract: '0x',
-//   salt: ' ',
-// }
-
 export const delegateEIP721Types = {
   Ticket: [
     { name: 'expires', type: 'string' },
@@ -37,4 +29,11 @@ export const HEADER_DELEGATE = 'x-delegate'
 export const HEADER_DELEGATE_SIGNATURE = 'x-delegate-signature'
 export const HEADER_EIP712_DELEGATE_SIGNATURE = 'x-eip712-delegate-signature'
 
-export const DEFAULT_DELEGATE_EXPIRES = 7 * 24 * 60 * 60 // 1 week
+export const DEFAULT_DELEGATE_EXPIRES = 24 * 60 * 60 // 1 day
+
+/**
+ * A buffer time (in seconds) added to the current time when verifying the validity of a delegate.
+ * This ensures that if the current time plus the buffer exceeds the delegate's expiry date,
+ * the delegate is considered expired.
+ */
+export const DELEGATE_EXPIRATION_THRESHOLD_BUFFER = 5 // 5 seconds
