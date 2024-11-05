@@ -1,5 +1,5 @@
 {
-  "name": "example-hardhat-plugin",
+  "name": "example-hardhat-plugin-fireblocks",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
