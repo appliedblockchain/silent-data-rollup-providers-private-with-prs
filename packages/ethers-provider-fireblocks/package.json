@@ -4,7 +4,7 @@
   },
   "repository": "https://github.com/appliedblockchain/silent-data-rollup-quickstart",
   "name": "@appliedblockchain/silentdatarollup-ethers-provider-fireblocks",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Custom providers for Silent Data Rollup compatible with ethers.js and Fireblocks",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
