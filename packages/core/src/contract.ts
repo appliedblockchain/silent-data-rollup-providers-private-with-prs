@@ -36,7 +36,7 @@ export class SilentDataRollupContract extends Contract {
 
     super(address, abi, runner)
 
-    if (typeof (runner as any).setContract === 'function') {
+    if (typeof (runner as any).baseProvider?.setContract === 'function') {
       ;(runner as any).baseProvider.setContract(this, contractMethodsToSign)
     }
   }

@@ -4,7 +4,7 @@
   },
   "repository": "https://github.com/appliedblockchain/silent-data-rollup-quickstart",
   "name": "@appliedblockchain/silentdatarollup-core",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Core library for Silent Data Rollup",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

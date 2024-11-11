@@ -22,7 +22,6 @@ import {
 import {
   AuthHeaders,
   AuthSignatureMessage,
-  AuthSignatureMessageRequest,
   BaseConfig,
   DelegateConfig,
   DelegateHeaders,
