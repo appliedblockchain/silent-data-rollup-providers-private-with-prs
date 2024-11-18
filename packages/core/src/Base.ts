@@ -341,7 +341,7 @@ export class SilentDataRollupBase {
   }
 
   public setContract(contract: Contract, contractMethodsToSign: string[]) {
-    log('Setting contract and methods to sign')
+    log('Setting contract and methods to sign: ', contractMethodsToSign)
     this.contract = contract
     this.contractMethodsToSign = contractMethodsToSign
   }
