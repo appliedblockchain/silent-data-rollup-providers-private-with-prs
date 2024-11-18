@@ -74,24 +74,37 @@ export class SilentDataRollupProvider extends JsonRpcProvider {
 
     this.baseProvider = new SilentDataRollupBase(config)
 
-    this.signer = config.signer || new Wallet(config.privateKey!, this)
     this.config = config
     this.config.authSignatureType =
       config.authSignatureType || SignatureType.Raw
+    if (config.signer) {
+      this.signer = config.signer.connect(this)
+    } else {
+      const wallet = new Wallet(config.privateKey!)
+      this.signer = wallet.connect(this)
+    }
   }
 
   async _send(
     payload: JsonRpcPayload | Array<JsonRpcPayload>
   ): Promise<Array<JsonRpcResult>> {
-    const request = this._getConnection()
-    request.body = JSON.stringify(payload)
-    request.setHeader('content-type', 'application/json')
-
     // Disable batch requests by setting batchMaxCount to 1
     // TODO: Implement support for batch requests in the future
     if (Array.isArray(payload)) {
       throw new Error('Batch requests are not currently supported')
     }
+
+    // Set the from on eth_calls
+    if (payload.method === 'eth_call' && Array.isArray(payload.params)) {
+      const txParams = payload.params[0]
+      if (typeof txParams === 'object' && txParams !== null) {
+        txParams.from = await this.signer.getAddress()
+      }
+    }
+
+    const request = this._getConnection()
+    request.body = JSON.stringify(payload)
+    request.setHeader('content-type', 'application/json')
 
     const requiresAuthHeaders =
       SIGN_RPC_METHODS.includes(payload.method) ||
