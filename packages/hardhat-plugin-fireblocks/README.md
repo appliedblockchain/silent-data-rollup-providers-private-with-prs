@@ -30,7 +30,7 @@ Custom providers for SilentData Rollup, compatible with ethers.js.
 #### Installing Hardhat Integration Dependencies
 
 ```bash
-npm install @appliedblockchain/silentdatarollup-core @appliedblockchain/silentdatarollup-hardhat-plugin-fireblocks @nomicfoundation/hardhat-ethers@3
+npm install @appliedblockchain/silentdatarollup-core @appliedblockchain/silentdatarollup-hardhat-plugin-fireblocks @nomicfoundation/hardhat-ignition-ethers@0.15.7
 ```
 
 #### Hardhat Integration Example
@@ -48,10 +48,11 @@ import "@appliedblockchain/silentdatarollup-hardhat-plugin-fireblocks";
 import { SilentDataSignatureTypeRollupProvider } from "@appliedblockchain/silentdatarollup-core";
 
 const RPC_URL = "SILENT_DATA_ROLLUP_RPC_URL";
+const FIREBLOCKS_API_KEY = "FIREBLOCKS_API_KEY";
 
 const fireblocksConfig = {
-  privateKey: FIREBLOCKS_PATH_TO_PRIVATE_KEY",
-  apiKey: "FIREBLOCKS_API_KEY",,
+  privateKey: "FIREBLOCKS_PATH_TO_PRIVATE_KEY",
+  apiKey: FIREBLOCKS_API_KEY,
   assetId: ASSETS[ChainId.SEPOLIA].assetId,
   vaultAccountIds: "FIREBLOCKS_VAULT_ACCOUNT_ID", // Note: Currently, only one vault account can be passed to the configuration.
   chainId: ChainId.SEPOLIA,

@@ -1,3 +1,4 @@
+import './type-extensions'
 import '@fireblocks/hardhat-fireblocks'
 import debug from 'debug'
 import { extendEnvironment } from 'hardhat/config'
@@ -25,6 +26,6 @@ extendEnvironment((hre) => {
     hre.network.provider,
     networkConfig.silentdata
   )
-  log('Provider extended')
+  log('Wrapped provider created')
   hre.network.provider = wrappedProvider
 })

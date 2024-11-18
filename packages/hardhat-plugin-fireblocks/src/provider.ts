@@ -1,5 +1,3 @@
-import { TransactionReceipt } from '@ethersproject/abstract-provider'
-import { FireblocksWeb3Provider } from '@fireblocks/fireblocks-web3-provider'
 import {
   eip721Domain,
   getAuthEIP721Types,
@@ -9,14 +7,10 @@ import {
   SignatureType,
   SilentDataRollupBase,
 } from '@appliedblockchain/silentdatarollup-core'
+import { TransactionReceipt } from '@ethersproject/abstract-provider'
+import { FireblocksWeb3Provider } from '@fireblocks/fireblocks-web3-provider'
 import debug from 'debug'
-import {
-  hashMessage,
-  hexlify,
-  JsonRpcPayload,
-  keccak256,
-  Transaction,
-} from 'ethers'
+import { hashMessage, hexlify, keccak256, Transaction } from 'ethers'
 import {
   PeerType,
   TransactionArguments,

@@ -1,3 +1,4 @@
+import './type-extensions'
 import { DEBUG_NAMESPACE } from '@appliedblockchain/silentdatarollup-core'
 import debug from 'debug'
 import { Wallet } from 'ethers'

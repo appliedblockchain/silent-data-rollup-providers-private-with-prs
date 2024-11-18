@@ -30,7 +30,7 @@ Custom providers for integrating SilentData Rollup with Hardhat.
 #### Installing Hardhat Integration Dependencies
 
 ```bash
-npm install @appliedblockchain/silentdatarollup-hardhat-plugin @nomicfoundation/hardhat-ethers@3
+npm install @appliedblockchain/silentdatarollup-hardhat-plugin @nomicfoundation/hardhat-ignition-ethers@0.15.7
 ```
 
 #### Hardhat Integration Example
@@ -38,7 +38,7 @@ npm install @appliedblockchain/silentdatarollup-hardhat-plugin @nomicfoundation/
 To integrate the SilentData Rollup Provider with Hardhat, you need to configure your Silent Data network in the `hardhat.config.ts` file. Below is an example of how to set it up, and note that a `silentdata` property is needed on the network config to enable it. This property can be an empty object to apply defaults, or you can specify the configurations.
 
 ```typescript
-import "@nomicfoundation/hardhat-ethers";
+import "@nomicfoundation/hardhat-ignition-ethers";
 import "@appliedblockchain/silentdatarollup-hardhat-plugin";
 
 const RPC_URL = "SILENT_DATA_ROLLUP_RPC_URL";
