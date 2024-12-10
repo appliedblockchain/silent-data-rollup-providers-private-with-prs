@@ -1,0 +1,17 @@
+{
+  "name": "ethers-provider-nodejs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@appliedblockchain/silentdatarollup-core": "file:../../packages/core",
+    "@appliedblockchain/silentdatarollup-ethers-provider": "file:../../packages/ethers-provider",
+    "dotenv": "16.4.5"
+  }
+}
