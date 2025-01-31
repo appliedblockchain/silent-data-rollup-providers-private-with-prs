@@ -14,6 +14,7 @@ import {
 } from '@appliedblockchain/silentdatarollup-core'
 import {
   assertArgument,
+  BrowserProvider,
   FetchRequest,
   JsonRpcApiProviderOptions,
   JsonRpcPayload,
@@ -23,7 +24,7 @@ import {
   Signer,
   Wallet,
 } from 'ethers'
-import { SilentDataRollupProviderConfig } from './types'
+import { CustomSigner, SilentDataRollupProviderConfig } from './types'
 
 function getNetwork(name: NetworkName, chainId?: number): Network {
   switch (name) {
@@ -170,4 +171,46 @@ export class SilentDataRollupProvider extends JsonRpcProvider {
     const clonedProvider = new SilentDataRollupProvider(this.config)
     return clonedProvider
   }
+}
+
+type ProviderInstance = {
+  provider: SilentDataRollupProvider;
+  signer: CustomSigner;
+} | null;
+
+// Singleton instance
+let providerInstance: ProviderInstance = null;
+
+export async function createSilentDataProvider() {
+  if (!providerInstance) {
+    if (!window.ethereum) {
+      throw new Error('Please install MetaMask!');
+    }
+
+    const browserProvider = new BrowserProvider(window.ethereum);
+    const metaMaskSigner = await browserProvider.getSigner();
+
+    // Create our custom signer
+    const customSigner = Object.create(metaMaskSigner) as CustomSigner;
+    customSigner.connect = () => customSigner;
+
+    providerInstance = {
+      signer: customSigner,
+      provider: new SilentDataRollupProvider({
+        rpcUrl: import.meta.env.VITE_RPC_URL,
+        chainId: Number(import.meta.env.VITE_CHAIN_ID),
+        signer: customSigner,
+        delegate: true,
+        network: import.meta.env.VITE_CHAIN_NETWORK,
+      }),
+    };
+
+    // Overwrite the clone method to return the same instance to avoid lost of state
+    providerInstance.provider.clone = () => providerInstance!.provider;
+  }
+  return providerInstance;
+}
+
+export function clearProviderInstance() {
+  providerInstance = null;
 }
