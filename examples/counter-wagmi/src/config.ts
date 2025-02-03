@@ -3,7 +3,6 @@ import { createConfig, http } from 'wagmi'
 import { hardhat } from 'wagmi/chains'
 import { coinbaseWallet, injectedWallet, ledgerWallet, metaMaskWallet, rainbowWallet, walletConnectWallet } from '@rainbow-me/rainbowkit/wallets'
 
-console.log('*******', import.meta.env.VITE_WALLETCONNECT_PROJECT_ID)
 export const config = createConfig({
   chains: [hardhat],
   ssr: true,
