@@ -1,14 +1,9 @@
-import {
-  NetworkName,
-  SignatureType,
-  SilentDataRollupContract,
-} from '@appliedblockchain/silentdatarollup-core'
-import { SilentDataRollupProvider } from '@appliedblockchain/silentdatarollup-ethers-provider'
-import { BrowserProvider, formatUnits } from 'ethers'
 import { useEffect, useState, useRef } from 'react'
-import './App.css'
+import { BrowserProvider, formatUnits } from 'ethers'
+import { SilentDataRollupContract } from '@appliedblockchain/silentdatarollup-core'
+import { SilentDataRollupProvider } from '@appliedblockchain/silentdatarollup-ethers-provider'
 import { ERC20_ABI } from './constants/erc20Abi'
-import { Sign } from 'crypto'
+import './App.css'
 
 declare global {
   interface Window {
@@ -43,10 +38,10 @@ function useSilentDataProvider() {
         signer,
         provider: new SilentDataRollupProvider({
           rpcUrl: process.env.REACT_APP_ROLLUP_RPC_URL!,
-          chainId: 1,
+          chainId: Number(process.env.REACT_APP_CHAIN_ID!),
+          delegate: true,
           // @ts-ignore
           signer: signer,
-          delegate: true,
         }),
       }
     }
@@ -146,7 +141,6 @@ function App() {
         provider,
         ['balanceOf']
       )
-      debugger
       console.log('tokenContract ==> ', tokenContract)
 
       const [name, symbol, decimals, balance] = await Promise.all([
@@ -265,8 +259,14 @@ function App() {
               {tokens.map((token) => (
                 <div key={token.address} className="token-card">
                   <div className="token-info">
-                    <span className="token-name">{token.name}</span>
-                    <span className="token-symbol">({token.symbol})</span>
+                    <div className="token-primary-info">
+                      <span className="token-name">{token.name}</span>
+                      <span className="token-symbol">({token.symbol})</span>
+                    </div>
+                    <span className="token-address">{`${token.address.slice(
+                      0,
+                      6
+                    )}...${token.address.slice(-4)}`}</span>
                   </div>
                   <div className="token-balance">
                     <span>{token.balance}</span>

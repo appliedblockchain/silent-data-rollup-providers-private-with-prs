@@ -91,7 +91,7 @@ h1 {
 .status-dot {
   width: 8px;
   height: 8px;
-  background: #4CAF50;
+  background: #4caf50;
   border-radius: 50%;
 }
 
@@ -153,7 +153,14 @@ h1 {
 
 .token-info {
   display: flex;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.token-primary-info {
+  display: flex;
+  gap: 0.25rem;
   align-items: center;
 }
 
@@ -164,6 +171,10 @@ h1 {
 
 .token-symbol {
   color: #8888a5;
+}
+
+.token-address {
+  color: #a8a8c5;
 }
 
 .token-balance {
@@ -198,9 +209,9 @@ h1 {
   flex: 1;
   padding: 0.8rem;
   border-radius: 12px;
-  border: 1px solid #ECEFFA;
-  background: #F7F8FD;
-  color: #2D2C34;
+  border: 1px solid #eceffa;
+  background: #f7f8fd;
+  color: #2d2c34;
   font-size: 1rem;
 }
 

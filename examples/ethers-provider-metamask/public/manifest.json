@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Ethers Provider Metamask",
+  "name": "Ethers Provider Metamask Example",
   "icons": [
     {
       "src": "favicon.ico",
