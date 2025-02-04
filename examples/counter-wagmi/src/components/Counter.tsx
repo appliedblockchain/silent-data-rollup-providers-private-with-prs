@@ -111,7 +111,7 @@ export function Counter() {
             </button>
           </span>
         ) : (
-          'Not connected'
+          '--'
         )}
         {chainId && (
           <span className="ml-2">

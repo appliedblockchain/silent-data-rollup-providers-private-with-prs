@@ -7,6 +7,7 @@ import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { ToastContainer } from './components/ToastContainer';
 import '@rainbow-me/rainbowkit/styles.css'
+import { SDProviderSession } from '@appliedblockchain/silentdatarollup-viem-plugin'
 
 const queryClient = new QueryClient()
 
@@ -22,6 +23,7 @@ function App() {
               <Counter />
             </main>
             <Footer />
+            <SDProviderSession />
           </div>
         </RainbowKitProvider>
       </QueryClientProvider>

@@ -197,8 +197,8 @@ export class SilentDataRollupProvider extends JsonRpcProvider {
     methodsToSign,
   }: SilentDataProviderConfig = {}) {
     SDProviderInstance = new SilentDataRollupProvider({
-      rpcUrl: rpcUrl || process.env.NEXT_PUBLIC_SILENTDATA_RPC_URL || 'https://rollup.silentdata.com/',
-      chainId: chainId || Number(process.env.NEXT_PUBLIC_SILENTDATA_CHAIN_ID) || 33939,
+      rpcUrl: rpcUrl || 'https://rollup.silentdata.com/',
+      chainId: chainId || 33939,
       delegate: delegate ?? true,
       authSignatureType: signatureType || SignatureType.Raw,
       network: network || NetworkName.TESTNET,

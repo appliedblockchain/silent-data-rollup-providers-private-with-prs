@@ -1,6 +1,13 @@
 {
   "name": "Counter App",
-  "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+  "deployments": {
+    "31337": {
+      "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+    },
+    "33939": {
+      "address": "0x5F69bC3D8f09B22E5C3E0C96a9EFebe4629047eC"
+    }
+  },
   "abi": [
     {
       "inputs": [

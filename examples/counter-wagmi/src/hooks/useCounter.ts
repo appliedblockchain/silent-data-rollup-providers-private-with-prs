@@ -1,9 +1,11 @@
 import { useReadContract, useWriteContract } from 'wagmi';
 import { useContractConfig } from './useContractConfig';
+import { useNonce } from './useNonce'
 
 export function useCounter() {
   const { contractAddress, abi } = useContractConfig();
   const { writeContractAsync } = useWriteContract();
+  const { nonce } = useNonce()
 
   const increment = async () => {
     if (!contractAddress || !abi) return;
@@ -11,7 +13,8 @@ export function useCounter() {
     await writeContractAsync({
       address: contractAddress,
       abi,
-      functionName: 'increment'
+      functionName: 'increment',
+      nonce
     });
   };
 
@@ -21,7 +24,8 @@ export function useCounter() {
     await writeContractAsync({
       address: contractAddress,
       abi,
-      functionName: 'decrement'
+      functionName: 'decrement',
+      nonce
     });
   };
 
@@ -31,7 +35,8 @@ export function useCounter() {
     await writeContractAsync({
       address: contractAddress,
       abi,
-      functionName: 'reset'
+      functionName: 'reset',
+      nonce
     });
   };
 
