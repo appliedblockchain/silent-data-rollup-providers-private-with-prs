@@ -1,21 +1,24 @@
 {
   "name": "vite-react-typescript-starter",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "tsc": "tsc"
   },
   "dependencies": {
+    "@appliedblockchain/silentdatarollup-core": "file:../../packages/core",
+    "@appliedblockchain/silentdatarollup-viem-plugin": "file:../../packages/viem-plugin",
     "@rainbow-me/rainbowkit": "^2.2.2",
     "@tanstack/react-query": "^5.66.0",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "viem": "^2.22.10",
+    "viem": "^2.22.21",
     "wagmi": "^2.14.8"
   },
   "devDependencies": {

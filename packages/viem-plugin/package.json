@@ -7,12 +7,14 @@
   "version": "0.1.0",
   "description": "Viem and Wagmi plugin for Silent Data Rollup",
   "main": "dist/index.js",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "build:watch": "npm run build -- --watch",
     "prepack": "npm run build",
     "test": "jest"
   },
@@ -32,9 +34,10 @@
     "wagmi": "^2.14.8"
   },
   "devDependencies": {
-    "@types/node": "22.5.4",
+    "@types/node": "20.11.16",
     "@types/react": "^18.0.0",
     "ts-node": "10.9.2",
+    "tsup": "^8.3.6",
     "typescript": "5.6.2"
   },
   "peerDependencies": {

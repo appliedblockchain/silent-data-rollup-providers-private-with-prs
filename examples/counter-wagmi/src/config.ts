@@ -2,12 +2,14 @@ import { connectorsForWallets } from '@rainbow-me/rainbowkit'
 import { createConfig, http } from 'wagmi'
 import { hardhat } from 'wagmi/chains'
 import { coinbaseWallet, injectedWallet, ledgerWallet, metaMaskWallet, rainbowWallet, walletConnectWallet } from '@rainbow-me/rainbowkit/wallets'
+import { silentdata } from '@appliedblockchain/silentdatarollup-viem-plugin'
 
 export const config = createConfig({
-  chains: [hardhat],
+  chains: [hardhat, silentdata],
   ssr: true,
   transports: {
     [hardhat.id]: http(),
+    [silentdata.id]: http(),
   },
   connectors: connectorsForWallets([{
     groupName: 'Supported Wallets',
