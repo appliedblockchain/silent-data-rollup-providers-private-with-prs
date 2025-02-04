@@ -77,8 +77,15 @@ export class SilentDataRollupProvider extends JsonRpcProvider {
     this.config = config
     this.config.authSignatureType =
       config.authSignatureType || SignatureType.Raw
+
     if (config.signer) {
-      this.signer = config.signer.connect(this)
+      try {
+        // try to connect the signer to the provider
+        this.signer = config.signer.connect(this)
+      } catch {
+        // if the connection fails, use the signer directly
+        this.signer = config.signer
+      }
     } else {
       const wallet = new Wallet(config.privateKey!)
       this.signer = wallet.connect(this)
