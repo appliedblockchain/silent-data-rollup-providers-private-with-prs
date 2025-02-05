@@ -6,7 +6,7 @@ import {
 import { NetworkName, SignatureType } from '@appliedblockchain/silentdatarollup-core'
 import { SilentDataRollupProvider } from './provider'
 import { getSigner } from './get-signer'
-
+import { Sender } from './sender'
 export type SilentDataTransportConfig = {
 	/**
 	 * The RPC URL
@@ -19,9 +19,10 @@ export type SilentDataTransportConfig = {
 
 	signatureType?: SignatureType
 
-	network?: NetworkName,
+	network?: NetworkName
 
 	methodsToSign?: string[]
+
 }
 
 /**
@@ -43,6 +44,8 @@ export function sdt({
 		network,
 		methodsToSign
 	})
+
+	const sender = new Sender(provider)
 	
 	return custom({
 		async request({ method, params }) {	
@@ -51,7 +54,8 @@ export function sdt({
 			}
 
 			provider.signer = await getSigner(provider.wagmiConfig)
-			return provider.send(method, params)
+			// Use sender.send instead to manage concurrent requests with signed session
+			return sender.send(method, params)
 		},
 	}, {
 		key: 'silentdata',

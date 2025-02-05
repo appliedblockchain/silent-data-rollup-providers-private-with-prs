@@ -78,7 +78,7 @@ export class SilentDataRollupProvider extends JsonRpcProvider {
     getAddress: () => Promise<string>
     signMessage: (message: string) => Promise<string>
   }
-  private baseProvider: SilentDataRollupBase
+  public baseProvider: SilentDataRollupBase
   public methodsToSign: string[]
 
   constructor(config: SilentDataRollupProviderConfig & { methodsToSign?: string[] }) {
@@ -213,7 +213,7 @@ export class SilentDataRollupProvider extends JsonRpcProvider {
     return clonedProvider
   }
 
-  isSignableContractCall(payload: JsonRpcPayload): boolean {
+  isSignableContractCall(payload: Pick<JsonRpcPayload, 'method' | 'params'>): boolean {
     // Return false if no methods are to be signed
     if (!this.methodsToSign.length) {
       return false
