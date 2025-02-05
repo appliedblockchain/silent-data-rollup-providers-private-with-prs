@@ -4,16 +4,18 @@ import { hardhat } from 'wagmi/chains'
 import { coinbaseWallet, injectedWallet, ledgerWallet, metaMaskWallet, rainbowWallet, walletConnectWallet } from '@rainbow-me/rainbowkit/wallets'
 import { sd_testnet, sdt, NetworkName} from '@appliedblockchain/silentdatarollup-viem-plugin'
 
-const sdChainId = +import.meta.env.VITE_SILENTDATA_CHAIN_ID
-const sdRpcUrl = import.meta.env.VITE_SILENTDATA_RPC_URL || 'https://testnet.rollup.silentdata.com'
+const silentdata = sd_testnet({
+  chainId: +import.meta.env.VITE_SILENTDATA_CHAIN_ID,
+  rpcUrl: import.meta.env.VITE_SILENTDATA_RPC_URL
+})
 
 export const config = createConfig({
-  chains: [hardhat, sd_testnet(sdChainId)],
+  chains: [hardhat, silentdata],
   ssr: true,
   transports: {
     [hardhat.id]: http(),
-    [sdChainId]: sdt({
-      rpcUrl: sdRpcUrl,
+    [silentdata.id]: sdt({
+      chain: silentdata,
       network: NetworkName.TESTNET,
       methodsToSign: [
         'getCountPrivate()',

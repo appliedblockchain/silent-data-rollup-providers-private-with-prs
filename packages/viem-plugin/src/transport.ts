@@ -1,7 +1,7 @@
-import { 
-	type Transport,
+import {
+	Chain,
 	custom,
-	defineChain,
+	Transport,
 } from 'viem'
 import { NetworkName, SignatureType } from '@appliedblockchain/silentdatarollup-core'
 import { SilentDataRollupProvider } from './provider'
@@ -23,6 +23,8 @@ export type SilentDataTransportConfig = {
 
 	methodsToSign?: string[]
 
+	chain?: Chain
+
 }
 
 /**
@@ -35,10 +37,14 @@ export function sdt({
 	network,
 	delegate,
 	methodsToSign,
+	chain,
 }: SilentDataTransportConfig = {}): Transport {
+	const chainId_ = chain?.id ?? chainId
+	const rpcUrl_ = chain?.rpcUrls.default.http[0] ?? rpcUrl
+	
 	const provider = SilentDataRollupProvider.configure({
-		rpcUrl,
-		chainId,
+		rpcUrl: rpcUrl_,
+		chainId: chainId_,
 		delegate,
 		signatureType,
 		network,
