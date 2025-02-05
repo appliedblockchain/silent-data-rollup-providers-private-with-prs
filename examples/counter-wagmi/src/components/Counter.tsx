@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Plus, Minus, RotateCcw, Copy, Check, Crown } from 'lucide-react'
 import { useToast } from '../hooks/useToast'
 import { useCount, useCounter, useOwner } from '../hooks/useCounter'
@@ -8,7 +8,6 @@ import { formatAddress } from '../lib/utils/format'
 import { copyToClipboard } from '../lib/utils/clipboard'
 
 export function Counter() {
-  const [count, setCount] = useState(0)
   const [copied, setCopied] = useState(false)
   const [ownerCopied, setOwnerCopied] = useState(false)
   const { showToast } = useToast()
@@ -19,25 +18,44 @@ export function Counter() {
   const owner = useOwner({ watch: true })
 
   const handleIncrement = async () => {
-    setCount(prev => prev + 1)
-    showToast('Counter increased', 'success')
-    await writeCounter('increment')
-    console.log('incremented chain')
+    try {
+      await writeCounter('increment')
+      showToast('Counter increased', 'success')
+    } catch {
+      showToast('Failed to increment counter', 'error')
+    }
   }
 
   const handleDecrement = async () => {
-    setCount(prev => prev - 1)
-    showToast('Counter decreased', 'info')
-    await writeCounter('decrement')
-    console.log('decremented chain')
+    try {
+      await writeCounter('decrement')
+      showToast('Counter decreased', 'success')
+    } catch {
+      showToast('Failed to decrement counter', 'error')
+    }
   }
 
   const handleReset = async () => {
-    setCount(0)
-    showToast('Counter reset', 'info')
-    if (countChain !== '0') {
-      await writeCounter('reset')
-      console.log('reset chain')
+    try {
+      if (countChain !== '0') {
+        await writeCounter('reset')
+        showToast('Counter reset', 'success')
+      }
+    } catch {
+      showToast('Failed to reset counter', 'error')
+    }
+  }
+
+  const handleClaimOwnership = async () => {
+    try {
+      await writeCounter('setOwner')
+      showToast('Ownership claim initiated', 'success')
+    } catch (error) {
+      if (error instanceof Error) {
+        showToast(error.message, 'error')
+      } else {
+        showToast('Failed to claim ownership', 'error')
+      }
     }
   }
 
@@ -47,26 +65,12 @@ export function Counter() {
     await copyToClipboard(contractAddress, {
       onSuccess: () => {
         setCopied(true)
-        showToast('Contract address copied', 'success')
         setTimeout(() => setCopied(false), 2000)
       },
       onError: () => {
         showToast('Failed to copy address', 'error')
       }
     })
-  }
-
-  const handleClaimOwnership = async () => {
-    try {
-      await writeCounter('setOwner')
-      showToast('Ownership claim initiated', 'info')
-    } catch (error) {
-      if (error instanceof Error) {
-        showToast(error.message, 'error')
-      } else {
-        showToast('Failed to claim ownership', 'error')
-      }
-    }
   }
 
   const handleCopyOwner = async () => {
@@ -84,14 +88,6 @@ export function Counter() {
     })
   }
 
-  useEffect(() => {
-    if (countChain && countChain !== '-') {
-      setCount(Number(countChain))
-    } else {
-      setCount(0)
-    }
-  }, [countChain])
-
   return (
     <div className="flex flex-col items-center">
       <div className="bg-white p-8 rounded-lg shadow-md w-96">
@@ -107,7 +103,7 @@ export function Counter() {
           </button>
           
           <div className="text-5xl font-bold text-gray-700 min-w-[120px] text-center">
-            {count}/{countChain}
+            {countChain}
           </div>
           
           <button

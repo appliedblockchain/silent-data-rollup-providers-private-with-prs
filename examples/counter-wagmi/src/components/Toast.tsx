@@ -1,20 +1,23 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { X } from 'lucide-react';
 
 interface ToastProps {
   message: string;
   type?: 'success' | 'error' | 'info';
+  duration?: number | null;
   onClose: () => void;
 }
 
-export function Toast({ message, type = 'info', onClose }: ToastProps) {
+export function Toast({ message, type = 'info', duration = 5000, onClose }: ToastProps) {
   useEffect(() => {
-    const timer = setTimeout(() => {
-      onClose();
-    }, 3000);
+    if (duration !== null) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, duration);
 
-    return () => clearTimeout(timer);
-  }, [onClose]);
+      return () => clearTimeout(timer);
+    }
+  }, [duration, onClose]);
 
   const bgColor = {
     success: 'bg-green-500',
