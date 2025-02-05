@@ -1,63 +1,96 @@
-import { useEffect, useState } from 'react';
-import { Plus, Minus, RotateCcw, Copy, Check } from 'lucide-react';
-import { useToast } from '../hooks/useToast';
-import { useCount, useCounter } from '../hooks/useCounter';
-import { useContractConfig } from '../hooks/useContractConfig';
-import { useChainId } from 'wagmi';
+import { useEffect, useState } from 'react'
+import { Plus, Minus, RotateCcw, Copy, Check, Crown } from 'lucide-react'
+import { useToast } from '../hooks/useToast'
+import { useCount, useCounter, useOwner } from '../hooks/useCounter'
+import { useContractConfig } from '../hooks/useContractConfig'
+import { useChainId } from 'wagmi'
 import { formatAddress } from '../lib/utils/format'
-import { copyToClipboard } from '../lib/utils/clipboard';
+import { copyToClipboard } from '../lib/utils/clipboard'
 
 export function Counter() {
-  const [count, setCount] = useState(0);
-  const [copied, setCopied] = useState(false);
-  const { showToast } = useToast();
-  const { increment: incrementChain, decrement: decrementChain, reset: resetChain } = useCounter();
-  const countChain = useCount({ watch: true });
-  const { contractAddress } = useContractConfig();
-  const chainId = useChainId();
+  const [count, setCount] = useState(0)
+  const [copied, setCopied] = useState(false)
+  const [ownerCopied, setOwnerCopied] = useState(false)
+  const { showToast } = useToast()
+  const { writeCounter } = useCounter()
+  const countChain = useCount({ watch: true })
+  const { contractAddress } = useContractConfig()
+  const chainId = useChainId()
+  const owner = useOwner({ watch: true })
 
-  const handleIncrement = () => {
-    setCount(prev => prev + 1);
-    showToast('Counter increased', 'success');
-    incrementChain().then(() => { console.log('incremented chain') });
-  };
+  const handleIncrement = async () => {
+    setCount(prev => prev + 1)
+    showToast('Counter increased', 'success')
+    await writeCounter('increment')
+    console.log('incremented chain')
+  }
 
-  const handleDecrement = () => {
-    setCount(prev => prev - 1);
-    showToast('Counter decreased', 'info');
-    decrementChain().then(() => { console.log('decremented chain') });
-  };
+  const handleDecrement = async () => {
+    setCount(prev => prev - 1)
+    showToast('Counter decreased', 'info')
+    await writeCounter('decrement')
+    console.log('decremented chain')
+  }
 
-  const handleReset = () => {
-    setCount(0);
-    showToast('Counter reset', 'info');
+  const handleReset = async () => {
+    setCount(0)
+    showToast('Counter reset', 'info')
     if (countChain !== '0') {
-      resetChain().then(() => { console.log('reset chain') });
+      await writeCounter('reset')
+      console.log('reset chain')
     }
-  };
+  }
 
   const handleCopyAddress = async () => {
-    if (!contractAddress) return;
+    if (!contractAddress) return
     
     await copyToClipboard(contractAddress, {
       onSuccess: () => {
-        setCopied(true);
-        showToast('Contract address copied', 'success');
-        setTimeout(() => setCopied(false), 2000);
+        setCopied(true)
+        showToast('Contract address copied', 'success')
+        setTimeout(() => setCopied(false), 2000)
       },
       onError: () => {
-        showToast('Failed to copy address', 'error');
+        showToast('Failed to copy address', 'error')
       }
-    });
-  };
+    })
+  }
+
+  const handleClaimOwnership = async () => {
+    try {
+      await writeCounter('setOwner')
+      showToast('Ownership claim initiated', 'info')
+    } catch (error) {
+      if (error instanceof Error) {
+        showToast(error.message, 'error')
+      } else {
+        showToast('Failed to claim ownership', 'error')
+      }
+    }
+  }
+
+  const handleCopyOwner = async () => {
+    if (!owner || owner === '-') return
+    
+    await copyToClipboard(owner, {
+      onSuccess: () => {
+        setOwnerCopied(true)
+        showToast('Owner address copied', 'success')
+        setTimeout(() => setOwnerCopied(false), 2000)
+      },
+      onError: () => {
+        showToast('Failed to copy address', 'error')
+      }
+    })
+  }
 
   useEffect(() => {
     if (countChain && countChain !== '-') {
-      setCount(Number(countChain));
+      setCount(Number(countChain))
     } else {
-      setCount(0);
+      setCount(0)
     }
-  }, [countChain]);
+  }, [countChain])
 
   return (
     <div className="flex flex-col items-center">
@@ -86,7 +119,16 @@ export function Counter() {
           </button>
         </div>
 
-        <div className="flex justify-center">
+        <div className="flex flex-col gap-4 items-center">
+          <button
+            onClick={handleClaimOwnership}
+            className="px-4 py-2 flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white rounded-md transition-colors"
+            aria-label="Claim Ownership"
+          >
+            <Crown size={16} />
+            Claim Ownership
+          </button>
+
           <button
             onClick={handleReset}
             className="px-4 py-2 flex items-center gap-2 bg-gray-700 hover:bg-gray-800 text-white rounded-md transition-colors"
@@ -98,27 +140,43 @@ export function Counter() {
         </div>
       </div>
 
-      <div className="mt-4 text-sm text-gray-400 text-center">
-        Contract: {contractAddress ? (
-          <span className="inline-flex items-center gap-2">
-            <span className="font-mono">{formatAddress(contractAddress)}</span>
-            <button
-              onClick={handleCopyAddress}
-              className="p-1 hover:text-gray-300 transition-colors"
-              aria-label="Copy contract address"
-            >
-              {copied ? <Check size={14} /> : <Copy size={14} />}
-            </button>
-          </span>
-        ) : (
-          '--'
-        )}
-        {chainId && (
-          <span className="ml-2">
-            (Chain ID: {chainId})
-          </span>
-        )}
+      <div className="mt-4 text-sm text-gray-400 text-center flex flex-col gap-1">
+        <div>
+          Contract: {contractAddress ? (
+            <span className="inline-flex items-center gap-2">
+              <span className="font-mono">{formatAddress(contractAddress)}</span>
+              <button
+                onClick={handleCopyAddress}
+                className="p-1 hover:text-gray-300 transition-colors"
+                aria-label="Copy contract address"
+              >
+                {copied ? <Check size={14} /> : <Copy size={14} />}
+              </button>
+            </span>
+          ) : (
+            '--'
+          )}
+          {chainId && (
+            <span className="ml-2">
+              (Chain ID: {chainId})
+            </span>
+          )}
+        </div>
+        <div>
+          Owner: <span className="font-mono">{owner !== '-' ? (
+            <span className="inline-flex items-center gap-2">
+              <span>{formatAddress(owner)}</span>
+              <button
+                onClick={handleCopyOwner}
+                className="p-1 hover:text-gray-300 transition-colors"
+                aria-label="Copy owner address"
+              >
+                {ownerCopied ? <Check size={14} /> : <Copy size={14} />}
+              </button>
+            </span>
+          ) : '--'}</span>
+        </div>
       </div>
     </div>
-  );
+  )
 } 

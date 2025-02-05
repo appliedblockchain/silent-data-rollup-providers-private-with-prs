@@ -15,7 +15,9 @@ export const config = createConfig({
     [sdChainId]: sdt({
       rpcUrl: sdRpcUrl,
       network: NetworkName.TESTNET,
-      methodsToSign: [] // TODO: add methods to sign
+      methodsToSign: [
+        'getCountPrivate()',
+      ]
     }),
   },
   connectors: connectorsForWallets([{
