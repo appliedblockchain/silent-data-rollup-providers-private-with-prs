@@ -29,7 +29,7 @@ type SilentDataProviderConfig = {
 	/**
 	 * The RPC URL
 	 */
-	rpcUrl?: string
+	rpcUrl: string
 
 	delegate?: boolean
 
@@ -195,16 +195,19 @@ export class SilentDataRollupProvider extends JsonRpcProvider {
     network,
     delegate,
     methodsToSign,
-  }: SilentDataProviderConfig = {}) {
-    SDProviderInstance = new SilentDataRollupProvider({
-      rpcUrl: rpcUrl || 'https://rollup.silentdata.com/',
-      chainId: chainId || 33939,
-      delegate: delegate ?? true,
-      authSignatureType: signatureType || SignatureType.Raw,
-      network: network || NetworkName.TESTNET,
-      methodsToSign
-    })
-  
+  }: SilentDataProviderConfig) {
+    // Singleton instance
+    if (!SDProviderInstance) {
+      SDProviderInstance = new SilentDataRollupProvider({
+        rpcUrl: rpcUrl,
+        chainId: chainId,
+        delegate: delegate,
+        authSignatureType: signatureType || SignatureType.Raw,
+        network: network || NetworkName.TESTNET,
+        methodsToSign
+      })
+    }
+
     return SDProviderInstance
   }
 

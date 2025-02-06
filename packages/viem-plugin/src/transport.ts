@@ -5,7 +5,7 @@ import {
 } from 'viem'
 import { NetworkName, SignatureType } from '@appliedblockchain/silentdatarollup-core'
 import { SilentDataRollupProvider } from './provider'
-import { getSigner } from './get-signer'
+import { getSigner as defaultGetSigner } from './get-signer'
 import { Sender } from './sender'
 export type SilentDataTransportConfig = {
 	/**
@@ -25,6 +25,15 @@ export type SilentDataTransportConfig = {
 
 	chain?: Chain
 
+	/**
+	 * Custom signer function to override the default one
+	 * Useful for instantiating a SD transport with viem client
+	 */
+	getSigner?: () => Promise<{
+		getAddress: () => Promise<string>
+		signMessage: (message: string) => Promise<string>
+	}>
+
 }
 
 /**
@@ -35,12 +44,13 @@ export function sdt({
 	chainId,
 	signatureType,
 	network,
-	delegate,
+	delegate = true,
 	methodsToSign,
 	chain,
+	getSigner: customGetSigner,
 }: SilentDataTransportConfig = {}): Transport {
 	const chainId_ = chain?.id ?? chainId
-	const rpcUrl_ = chain?.rpcUrls.default.http[0] ?? rpcUrl
+	const rpcUrl_ = chain?.rpcUrls.default.http[0] || rpcUrl || 'https://rollup.silentdata.com/'
 	
 	const provider = SilentDataRollupProvider.configure({
 		rpcUrl: rpcUrl_,
@@ -59,7 +69,7 @@ export function sdt({
 				throw new Error('wagmiConfig is not set')
 			}
 
-			provider.signer = await getSigner(provider.wagmiConfig)
+			provider.signer = await (customGetSigner || defaultGetSigner)(provider.wagmiConfig)
 
 			// SilentData RPC does not allow passing `true` for the second param with these methods
 			// TODO: find better solution for this

@@ -118,6 +118,7 @@ function App() {
 | `network` | `NetworkName` | Target network name |
 | `methodsToSign` | `string[]` | Array of RPC methods that require signing |
 | `chain` | `Chain` | Viem chain configuration object |
+| `getSigner` | `() => Promise<{ getAddress: () => Promise<string>, signMessage: (message: string) => Promise<string> }>` | Custom signer function to override the default one |
 
 ## Features
 
@@ -132,6 +133,33 @@ Built-in request queuing and management for concurrent operations that require s
 ### Custom Transport
 
 Implements viem's custom transport interface with Silent Data specific optimizations and handling.
+
+### Provider Instance
+
+The plugin uses a singleton pattern for the `SilentDataRollupProvider`. All Silent Data transports share the same provider instance across your application, ensuring consistent state management and optimal resource usage. This means that configuration options like `rpcUrl`, `chainId`, and other settings will be shared across all transport instances.
+
+### Custom Signer
+
+You can provide your own signer implementation through the `getSigner` option:
+
+```typescript
+import { createPublicClient } from 'viem'
+import { sdt } from '@appliedblockchain/silentdatarollup-viem-plugin'
+
+const client = createPublicClient({
+  transport: sdt({
+    rpcUrl: 'YOUR_RPC_URL',
+    chainId: 1,
+    getSigner: async () => {
+      // Your custom signer implementation
+      return {
+        getAddress: async () => '0x...',
+        signMessage: async (message) => '0x...'
+      }
+    }
+  })
+})
+```
 
 ## License
 
