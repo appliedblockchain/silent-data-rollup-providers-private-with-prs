@@ -3,13 +3,13 @@ import { createContext, useContext, useState, ReactNode } from 'react';
 export interface Toast {
   id: number;
   message: string;
-  type: 'success' | 'error' | 'info';
+  type: 'success' | 'error' | 'info' | 'pending';
   duration?: number | null; // null means no auto-dismiss
 }
 
 interface ToastContextType {
   toasts: Toast[];
-  showToast: (message: string, type?: Toast['type'], options?: { duration?: number | null }) => void;
+  showToast: (message: string, type?: Toast['type'], options?: { duration?: number | null }) => number;
   removeToast: (id: number) => void;
 }
 
@@ -26,6 +26,7 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
       type,
       duration: options?.duration
     }]);
+    return id
   };
 
   const removeToast = (id: number) => {

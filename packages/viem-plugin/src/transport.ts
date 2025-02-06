@@ -60,6 +60,13 @@ export function sdt({
 			}
 
 			provider.signer = await getSigner(provider.wagmiConfig)
+
+			// SilentData RPC does not allow passing `true` for the second param with these methods
+			// TODO: find better solution for this
+			if (['eth_getBlockByNumber', 'eth_getBlockByHash'].includes(method)) {
+				params[1] = false
+			}
+
 			// Use sender.send instead to manage concurrent requests with signed session
 			return sender.send(method, params)
 		},

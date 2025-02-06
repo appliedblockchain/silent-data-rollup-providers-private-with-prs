@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Plus, Minus, RotateCcw, Copy, Check, Crown } from 'lucide-react'
 import { useToast } from '../hooks/useToast'
 import { useCount, useCounter, useOwner } from '../hooks/useCounter'
@@ -10,12 +10,27 @@ import { copyToClipboard } from '../lib/utils/clipboard'
 export function Counter() {
   const [copied, setCopied] = useState(false)
   const [ownerCopied, setOwnerCopied] = useState(false)
-  const { showToast } = useToast()
-  const { writeCounter } = useCounter()
+  const { showToast, removeToast } = useToast()
   const countChain = useCount({ watch: true })
   const { contractAddress } = useContractConfig()
   const chainId = useChainId()
   const owner = useOwner({ watch: true })
+  const toastId = useRef<number | undefined>()
+  const { writeCounter, isProcessing } = useCounter({
+    waitReceipt: true,
+    onSent: () => {
+      const id = showToast('Transaction is pending...', 'pending', { duration: null })
+      toastId.current = id
+    },
+    onConfirm: () => {
+      if (toastId.current !== undefined) {
+        setTimeout(() => {
+          removeToast(toastId.current!)
+          toastId.current = undefined
+        }, 1000)
+      }
+    }
+  })
 
   const handleIncrement = async () => {
     try {
@@ -49,7 +64,7 @@ export function Counter() {
   const handleClaimOwnership = async () => {
     try {
       await writeCounter('setOwner')
-      showToast('Ownership claim initiated', 'success')
+      showToast('Ownership claimed', 'success')
     } catch (error) {
       if (error instanceof Error) {
         showToast(error.message, 'error')
@@ -96,6 +111,7 @@ export function Counter() {
         <div className="flex items-center justify-center gap-6 mb-8">
           <button
             onClick={handleDecrement}
+            disabled={isProcessing}
             className="w-24 h-14 flex items-center justify-center bg-gray-600 hover:bg-gray-700 text-white rounded-full transition-colors"
             aria-label="Decrease"
           >
@@ -108,6 +124,7 @@ export function Counter() {
           
           <button
             onClick={handleIncrement}
+            disabled={isProcessing}
             className="w-24 h-14 flex items-center justify-center bg-gray-800 hover:bg-gray-900 text-white rounded-full transition-colors"
             aria-label="Increase"
           >
@@ -120,6 +137,7 @@ export function Counter() {
             onClick={handleClaimOwnership}
             className="px-4 py-2 flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white rounded-md transition-colors"
             aria-label="Claim Ownership"
+            disabled={isProcessing}
           >
             <Crown size={16} />
             Claim Ownership
@@ -129,6 +147,7 @@ export function Counter() {
             onClick={handleReset}
             className="px-4 py-2 flex items-center gap-2 bg-gray-700 hover:bg-gray-800 text-white rounded-md transition-colors"
             aria-label="Reset"
+            disabled={isProcessing}
           >
             <RotateCcw size={16} />
             Reset

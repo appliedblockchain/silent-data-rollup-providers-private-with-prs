@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 
 interface ToastProps {
   message: string;
-  type?: 'success' | 'error' | 'info';
+  type?: 'success' | 'error' | 'info' | 'pending';
   duration?: number | null;
   onClose: () => void;
 }
@@ -23,6 +23,7 @@ export function Toast({ message, type = 'info', duration = 5000, onClose }: Toas
     success: 'bg-green-500',
     error: 'bg-red-500',
     info: 'bg-blue-500',
+    pending: 'bg-yellow-500',
   }[type];
 
   return (

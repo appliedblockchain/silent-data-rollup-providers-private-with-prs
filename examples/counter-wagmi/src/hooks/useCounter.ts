@@ -1,32 +1,68 @@
-import { useAccount, useReadContract, useWriteContract } from 'wagmi';
+import { useAccount, useConfig, useReadContract, useWriteContract } from 'wagmi';
 import { useContractConfig } from './useContractConfig';
 import { useNonce } from './useNonce'
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
+import { waitForTransactionReceipt } from 'wagmi/actions'
 
 type UseReadCounterOptions = {
   watch?: boolean
   refetchInterval?: number
 }
 
-export function useCounter() {
+type WriteCounterOptions = {
+  onSent?: (functionName: string, args?: unknown[]) => void
+  onConfirm?: (functionName: string, args?: unknown[]) => void
+  onError?: (functionName: string, args?: unknown[]) => void
+  waitReceipt?: boolean
+}
+
+export function useCounter(options: WriteCounterOptions = {}) {
+  const [isProcessing, setIsProcessing] = useState(false)
   const { contractAddress, abi } = useContractConfig()
   const { writeContractAsync } = useWriteContract()
   const { nonce } = useNonce()
   const { address } = useAccount()
+  const config = useConfig()
 
-  const writeCounter = useCallback(async (functionName: string) => {
+  const writeCounter = useCallback(async (functionName: string, args?: unknown[]) => {
     if (!contractAddress || !abi || !address) return;
 
-    await writeContractAsync({
-      address: contractAddress,
-      abi,
-      functionName,
-      nonce
-    });
-  }, [contractAddress, abi, address, writeContractAsync, nonce])
+    setIsProcessing(true)
+    try {
+      const hash =await writeContractAsync({
+        address: contractAddress,
+        abi,
+        functionName,
+        nonce,
+        args
+      });
+  
+      options.onSent?.(functionName, args)
+  
+      let receipt
+  
+      if (options.waitReceipt) {
+        receipt = await waitForTransactionReceipt(config, { hash })
+        options.onConfirm?.(functionName, args)
+      }
+  
+      setIsProcessing(false)
+  
+      return {
+        receipt,
+        hash
+      }
+    } catch (error) {
+      options.onError?.(functionName, args)
+      setIsProcessing(false)
+      throw error
+    }
+    
+  }, [contractAddress, abi, address, writeContractAsync, nonce, config, options])
 
   return {
-    writeCounter
+    writeCounter,
+    isProcessing
   };
 }
 
