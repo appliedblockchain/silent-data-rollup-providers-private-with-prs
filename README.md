@@ -59,6 +59,3 @@ If you encounter any issues, please check the following:
 
 This project is licensed under the [MIT License](LICENSE).
 
-## Additional Resources
-
-- [SilentData Rollup Documentation](https://docs.silentdata.com)
