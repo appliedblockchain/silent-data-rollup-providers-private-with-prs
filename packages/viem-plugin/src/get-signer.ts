@@ -4,8 +4,9 @@ export const getSigner = async (config: Config) => {
   const client = await getWalletClient(config)
   const account = await getAccount(config)
 
-  if (!account || !client) {
-    throw new Error('No account or client found')
+  if (!client || !account || !account.address) {
+    // Using provider without a signer. This allows making requests without wallet connection
+    return  
   }
 
 	return {
